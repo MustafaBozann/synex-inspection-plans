@@ -1,0 +1,16 @@
+{
+  "id": "054_penstock",
+  "structure": "Penstock (pipe)",
+  "size": "\u00d8 4.3 m, length 65 m",
+  "difficulty": 0.12,
+  "wall_area_m2": 748,
+  "synex_coverage_pct": 100.0,
+  "standard_coverage_pct": 91.3,
+  "synex_too_close_points": 0,
+  "standard_too_close_points": 0,
+  "viewpoints": 123,
+  "route_m": 150.3,
+  "est_flight_min": 7.1,
+  "min_clearance_m": 1.58,
+  "planning_s": 0.8
+}

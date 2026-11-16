@@ -1,0 +1,16 @@
+{
+  "id": "048_tank",
+  "structure": "Vertical storage tank",
+  "size": "\u00d8 18.4 m, height 14.3 m, roof beams, columns",
+  "difficulty": 0.92,
+  "wall_area_m2": 1281,
+  "synex_coverage_pct": 100.0,
+  "standard_coverage_pct": 92.9,
+  "synex_too_close_points": 0,
+  "standard_too_close_points": 0,
+  "viewpoints": 204,
+  "route_m": 449.0,
+  "est_flight_min": 18.4,
+  "min_clearance_m": 0.36,
+  "planning_s": 4.4
+}

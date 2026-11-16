@@ -1,0 +1,16 @@
+{
+  "id": "081_ballast_tank",
+  "structure": "Ship ballast / wing tank",
+  "size": "26.4 x 3.4 x 17.7 m, 8 frames, 4 stringer decks, 1.01 m access holes",
+  "difficulty": 0.21,
+  "wall_area_m2": 2416,
+  "synex_coverage_pct": 100.0,
+  "standard_coverage_pct": 90.2,
+  "synex_too_close_points": 0,
+  "standard_too_close_points": 1008,
+  "viewpoints": 472,
+  "route_m": 544.9,
+  "est_flight_min": 26.0,
+  "min_clearance_m": 0.3,
+  "planning_s": 20.9
+}

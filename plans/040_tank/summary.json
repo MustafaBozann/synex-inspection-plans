@@ -1,0 +1,16 @@
+{
+  "id": "040_tank",
+  "structure": "Vertical storage tank",
+  "size": "\u00d8 23.2 m, height 7.0 m, roof beams, columns",
+  "difficulty": 0.58,
+  "wall_area_m2": 1286,
+  "synex_coverage_pct": 100.0,
+  "standard_coverage_pct": 90.6,
+  "synex_too_close_points": 0,
+  "standard_too_close_points": 0,
+  "viewpoints": 207,
+  "route_m": 419.5,
+  "est_flight_min": 17.4,
+  "min_clearance_m": 0.39,
+  "planning_s": 7.7
+}

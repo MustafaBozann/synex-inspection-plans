@@ -1,0 +1,16 @@
+{
+  "id": "019_boiler",
+  "structure": "Boiler (power plant)",
+  "size": "13.3 x 8.3 x 27.9 m, hopper, hanging tube panels, cables",
+  "difficulty": 0.75,
+  "wall_area_m2": 1623,
+  "synex_coverage_pct": 100.0,
+  "standard_coverage_pct": 72.9,
+  "synex_too_close_points": 0,
+  "standard_too_close_points": 77,
+  "viewpoints": 303,
+  "route_m": 504.1,
+  "est_flight_min": 21.9,
+  "min_clearance_m": 0.3,
+  "planning_s": 6.6
+}
