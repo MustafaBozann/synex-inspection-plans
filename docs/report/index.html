@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>SYNEX Tank Coverage</title>
-<meta name="description" content="Sample SYNEX Coverage Check report on a simulated ship ballast tank.">
+<meta name="description" content="SYNEX Coverage Check sample reports on four simulated confined spaces.">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
 <style>
 /* Layout: SYNEX brand (black, off-white) with blue for "not inspected". Logo intro, then findings column + live 3D tank with the drone flying; then compartment map, wall maps, plan, method. Single dark theme on purpose. */
@@ -51,6 +51,10 @@ h1 { font: 400 clamp(38px, 4.4vw, 58px)/1.0 var(--display); letter-spacing: .01e
 h1 .n { text-decoration: underline; text-decoration-thickness: 3px; text-underline-offset: 6px }
 .tag { font-size: 16.5px; color: var(--muted); margin: -4px 0 0; max-width: 36ch }
 .sim { align-self: flex-start; font: 500 11px var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--bg); background: var(--ink); padding: 5px 14px 5px 10px; clip-path: polygon(0 0, 100% 0, calc(100% - 8px) 50%, 100% 100%, 0 100%) }
+.picker { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px }
+.picker button { font: 500 13px var(--body); color: var(--muted); background: var(--panel); border: 1px solid var(--line); border-radius: 4px; padding: 9px 10px; cursor: pointer; text-align: left; transition: border-color .2s, color .2s }
+.picker button b { display: block; font: 400 17px/1.1 var(--display); letter-spacing: .04em; color: var(--ink); margin-bottom: 2px }
+.picker button[aria-selected="true"] { border-color: var(--ink); color: var(--ink) }
 .seg { display: grid; grid-template-columns: 1fr 1fr; border: 1px solid var(--line); border-radius: 4px; overflow: hidden }
 .seg button { font: 600 14px var(--body); color: var(--muted); background: var(--panel); border: 0; padding: 12px 10px; cursor: pointer; transition: background .25s, color .25s }
 .seg button[aria-pressed="true"] { background: var(--ink); color: var(--bg) }
@@ -129,9 +133,10 @@ th { font: 500 10.5px var(--mono); letter-spacing: .1em; text-transform: upperca
   <section class="hero">
     <div class="side">
       <div class="brand" style="animation-delay:2.9s"><div class="live"><img src="logo.png" alt="SYNEX logo"><div class="shine"></div></div><div><div class="name">SYNEX</div><div class="sub">COVERAGE CHECK</div></div></div>
-      <h1 id="headline" style="animation-delay:3.0s">Your pilot inspected <span class="n">19.9 %</span> of this tank</h1>
+      <div class="picker" role="tablist" aria-label="Structure" id="picker" style="animation-delay:2.95s"></div>
+      <h1 id="headline" style="animation-delay:3.0s">Your pilot inspected <span class="n">–</span></h1>
       <p class="tag" id="tag" style="animation-delay:3.1s">Watch the flight: walls turn white only when the camera saw them sharp enough to inspect.</p>
-      <div class="sim" style="animation-delay:3.15s">Sample report · simulated tank and flight</div>
+      <div class="sim" style="animation-delay:3.15s">Sample report · simulated structures and flights</div>
       <div class="seg" role="group" aria-label="Scenario" style="animation-delay:3.2s">
         <button id="b-flown" aria-pressed="true">Pilot's flight</button>
         <button id="b-after" aria-pressed="false">+ SYNEX re-fly</button>
@@ -146,33 +151,33 @@ th { font: 500 10.5px var(--mono); letter-spacing: .1em; text-transform: upperca
         <div class="lg"><i style="background:var(--ok)"></i><span>Inspected: sharp enough to judge the coating</span><b></b></div>
         <div class="lg"><i style="background:var(--soft)"></i><span>Seen, but not sharp enough</span><b></b></div>
         <div class="lg"><i style="background:var(--miss)"></i><span>Never in the camera's view</span><b></b></div>
-        <div class="lg"><i style="background:var(--steel)"></i><span>Steel edges and outside of the tank</span><b></b></div>
+        <div class="lg"><i style="background:var(--steel)"></i><span>Steel edges and outside of the structure</span><b></b></div>
       </div>
     </div>
     <div class="stage" id="stage">
-      <canvas id="gl" aria-label="3D model of the ballast tank with the drone flying inside"></canvas>
-      <div class="loading" id="loading">LOADING TANK…</div>
+      <canvas id="gl" aria-label="3D model of the structure with the drone flying inside"></canvas>
+      <div class="loading" id="loading">LOADING MODEL…</div>
       <div class="tools">
         <div class="chip"><button id="replay">&#8635; Replay flight</button><label><input type="checkbox" id="c-follow"> Follow drone</label></div>
-        <div class="chip"><label><input type="checkbox" id="c-shell"> Near side shell</label><label><input type="checkbox" id="c-path" checked> Flight path</label></div>
+        <div class="chip"><label><input type="checkbox" id="c-shell"> Near side wall</label><label><input type="checkbox" id="c-path" checked> Flight path</label></div>
       </div>
-      <div class="status"><span id="st-l">PORT WING BALLAST TANK · 16.9 × 2.8 × 14.8 M · NEAR SIDE SHELL REMOVED</span><span>DRAG TO ROTATE · SCROLL TO ZOOM</span></div>
+      <div class="status"><span id="st-l"></span><span>DRAG TO ROTATE · SCROLL TO ZOOM</span></div>
     </div>
   </section>
 
   <div class="steps">
     <div class="step"><div class="k">IN</div><h3>Your scan and flight log</h3><p>The point cloud and flight log your drone already records. No CAD drawing needed.</p></div>
     <div class="step"><div class="k">24 H</div><h3>Every wall patch checked</h3><p>Distance, angle, field of view, occlusion, pixel size, motion blur and light, at five points per 0.5 m patch.</p></div>
-    <div class="step"><div class="k">OUT</div><h3>What was really inspected</h3><p>Compartment by compartment, wall by wall, with the frame that proves it and the exact points to re-fly.</p></div>
+    <div class="step"><div class="k">OUT</div><h3>What was really inspected</h3><p>Zone by zone, wall by wall, with the frame that proves it and the exact points to re-fly.</p></div>
   </div>
 
   <section class="block">
-    <h2>Compartments</h2>
-    <p class="lede">Share of each compartment's walls inspected. Bays are numbered from the aft end, levels from the bottom. Click a compartment to fly the 3D view there.</p>
+    <h2 id="zones-h">Compartments</h2>
+    <p class="lede" id="zones-lede"></p>
     <div class="comp" id="comp"></div>
   </section>
 
-  <section class="block">
+  <section class="block" id="sec-maps">
     <h2>Wall maps</h2>
     <p class="lede">The two long walls unfolded flat, as on a shell expansion drawing. Dashed lines are the transverse bulkheads and stringer decks.</p>
     <div class="maps">
@@ -186,7 +191,7 @@ th { font: 500 10.5px var(--mono); letter-spacing: .1em; text-transform: upperca
     <section class="box">
       <h2>Re-fly plan</h2>
       <div class="tw"><table id="t-fl"><thead><tr><th>Flight</th><th class="r">Viewpoints</th><th class="r">Route</th><th class="r">Time</th></tr></thead><tbody></tbody></table></div>
-      <p class="muted" style="margin-top:12px;font-size:13px">Each flight starts and ends at the manhole and fits one battery with a 15 % reserve. Routes keep the cage radius plus a safety margin from every surface.</p>
+      <p class="muted" style="margin-top:12px;font-size:13px">Each flight starts and ends at the access opening and fits one battery with a 15 % reserve. Routes keep the cage radius plus a safety margin from every surface.</p>
     </section>
     <section class="box">
       <h2>Method and accuracy</h2>
@@ -200,9 +205,11 @@ th { font: 500 10.5px var(--mono); letter-spacing: .1em; text-transform: upperca
       <div id="t-prov" style="display:grid;gap:10px"></div>
     </section>
   </div>
-  <p class="foot">Full coverage means every wall area was imaged at the stated quality. It does not mean every defect was found; the images are still assessed by a qualified inspector. The drone animation replays the logged flight at high speed.</p>
+  <p class="foot">Full coverage means every wall area was imaged at the stated quality. It does not mean every defect was found; the images are still assessed by a qualified inspector. The drone animation replays the logged flight at high speed. All four structures and flights are simulated.</p>
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 <script>
@@ -215,68 +222,70 @@ th { font: 500 10.5px var(--mono); letter-spacing: .1em; text-transform: upperca
   intro.addEventListener("animationend", e => { if (e.animationName === "introOut") intro.hidden = true; });
   if (reduce) intro.hidden = true;
 
-  const HEX = { ok: "#f2f0ea", soft: "#7fb0f5", miss: "#1f4fd1", steel: "#8a8f96" };
-  const FLY_S = 30, REFLY_S = 32;           // animation lengths in seconds
-  let D, G, mode = "flown", renderer, scene, camera, controls, tileMat, shellGroup = [], pathLine, routeLine, drone, spot, follow = false;
-  let prog = 0, playing = false, tMax = 1, fTimes, rTimes, flight, routePts, routeCum;
+  const KINDS = [
+    { k: "kanat", t: "Ballast tank", s: "Ship wing tank", noun: "tank", zone: "Compartments", zoneLede: "Share of each compartment's walls inspected. Bays are numbered from the aft end, levels from the bottom. Click a compartment to fly the 3D view there." },
+    { k: "kazan", t: "Boiler", s: "Power plant", noun: "boiler", zone: "Elevations", zoneLede: "Share of the boiler walls inspected in each height band, from the hopper at the bottom to the roof. Click a band to fly the 3D view there." },
+    { k: "tank", t: "Storage tank", s: "Vertical, floating roof", noun: "tank", zone: "Shell rings and sides", zoneLede: "Share of the shell and internals inspected per height ring and compass side. Click a cell to fly the 3D view there." },
+    { k: "boru", t: "Penstock", s: "Hydro power pipe", noun: "penstock", zone: "Pipe sections", zoneLede: "Share of the pipe wall inspected in each section along its length. Click a section to fly the 3D view there." }];
+  const HEX = { ok: "#f2f0ea", soft: "#7fb0f5", miss: "#1f4fd1" };
+  const FLY_S = 30, REFLY_S = 32;
+  let D, G, K = KINDS[0], mode = "flown", renderer, scene, camera, controls, tileMat, shellGroup = [], tilesMesh, pathLine, routeLine, drone, follow = false, objs = [];
+  let prog = 0, playing = false, tMax = 1, flight, routePts, routeCum, pp, fSorted, missingSorted, nP, started = false, tw = null;
+  const cache = {};
 
-  // ------------------------------------------------------------------ text panels
+  $("picker").innerHTML = KINDS.map((x, i) => `<button role="tab" aria-selected="${i === 0}" data-k="${x.k}"><b>${x.t}</b>${x.s}</button>`).join("");
+  $("picker").querySelectorAll("button").forEach(b => b.onclick = () => load(b.dataset.k));
+
+  // ------------------------------------------------------------------ panels
   function texts() {
     const S = D.summary, A = mode === "after";
-    $("headline").innerHTML = A ? `With SYNEX re-fly: <span class="n">${fmt(S.after_refly_pct)} %</span> inspected` : `Your pilot inspected <span class="n">${fmt(S.inspected_pct)} %</span> of this tank`;
-    $("tag").textContent = A ? `${S.refly_points.toLocaleString("en-US")} extra viewpoints in ${S.refly_flights} short flights close the gaps. The blue walls turn white as the drone reaches them.`
+    $("headline").innerHTML = A ? `With SYNEX re-fly: <span class="n">${fmt(S.after_refly_pct)} %</span> inspected` : `Your pilot inspected <span class="n">${fmt(S.inspected_pct)} %</span> of this ${K.noun}`;
+    $("tag").textContent = A ? `${S.refly_points.toLocaleString("en-US")} extra viewpoints in ${S.refly_flights} short flight${S.refly_flights > 1 ? "s" : ""} close the gaps. The blue walls turn white as the drone reaches them.`
                              : "Watch the flight: walls turn white only when the camera saw them sharp enough to inspect.";
-    const k = A ? [[S.refly_points.toLocaleString("en-US"), "re-fly viewpoints"], [S.refly_flights + " × ~" + fmt(S.refly_minutes / S.refly_flights, 0) + " min", "short flights"], [fmt(S.after_refly_certain_pct) + "%", "certain under pose error"], [fmt(S.after_refly_angle_tiers_pct.ideal, 0) + "%", "seen at 0–25°"]]
-                 : [[fmt(S.seen_pct) + "%", "was in camera view"], [fmt(S.wall_m2 * (100 - S.inspected_pct) / 100, 0) + " m²", "not inspectable"], [fmt(S.wall_m2, 0) + " m²", "wall surface"], [String(G.comp.length), "compartments"]];
+    const k = A ? [[S.refly_points.toLocaleString("en-US"), "re-fly viewpoints"], [S.refly_flights + " × ~" + fmt(S.refly_minutes / Math.max(1, S.refly_flights), 0) + " min", "short flights"], [fmt(S.after_refly_certain_pct) + "%", "certain under pose error"], [fmt(S.after_refly_angle_tiers_pct.ideal, 0) + "%", "seen at 0–25°"]]
+                 : [[fmt(S.seen_pct) + "%", "was in camera view"], [fmt(S.wall_m2 * (100 - S.inspected_pct) / 100, 0) + " m²", "not inspectable"], [fmt(S.wall_m2, 0) + " m²", "wall surface"], [String(G.zones.cells.filter(c => c.m2 > 0).length), G.zones.row === "LEVEL" ? "compartments" : "zones"]];
     $("kpis").innerHTML = k.map(x => `<div class="kpi"><div class="v">${x[0]}</div><div class="l">${x[1]}</div></div>`).join("");
     $("cnt-l").textContent = A ? "of the wall inspected after re-fly" : "of the wall inspected so far";
-    comp(); maps();
+    zones(); maps();
   }
-
-  function shade(v) {   // 0..100 -> blue..white
-    const t = Math.max(0, Math.min(1, v / 100)), a = [31, 79, 209], b = [242, 240, 234];
-    return `rgb(${a.map((x, i) => Math.round(x + (b[i] - x) * t)).join(",")})`;
-  }
-  function comp() {
-    const A = mode === "after", nb = G.bx.length - 1, nl = G.bz.length - 1, el = $("comp");
-    el.style.setProperty("--bays", nb);
-    let h = `<div class="row"><div class="hd"></div>${Array.from({ length: nb }, (_, i) => `<div class="hd">BAY ${i + 1}</div>`).join("")}</div>`;
-    for (let l = nl; l >= 1; l--) {
-      h += `<div class="row"><div class="hd" style="align-items:center">LEVEL ${l}</div>`;
-      for (let b = 1; b <= nb; b++) {
-        const c = G.comp.find(x => x.bay === b && x.level === l), v = A ? c.after : c.flown, dark = v > 55;
-        h += `<button class="cell" data-b="${b}" data-l="${l}" style="background:${shade(v)};color:${dark ? "#111" : "#f2efe9"}"><div class="p">${fmt(v, 0)}%</div><div class="a">${fmt(c.m2, 0)} m²</div></button>`;
+  function shade(v) { const t = Math.max(0, Math.min(1, v / 100)), a = [31, 79, 209], b = [242, 240, 234]; return `rgb(${a.map((x, i) => Math.round(x + (b[i] - x) * t)).join(",")})`; }
+  function zones() {
+    const A = mode === "after", Z = G.zones, nc = Z.cols.length, el = $("comp");
+    $("zones-h").textContent = K.zone; $("zones-lede").textContent = K.zoneLede;
+    el.style.setProperty("--bays", nc);
+    let h = `<div class="row"><div class="hd"></div>${Z.cols.map(c => `<div class="hd">${c}</div>`).join("")}</div>`;
+    for (let r = Z.nrows; r >= 1; r--) {
+      h += `<div class="row"><div class="hd" style="align-items:center">${Z.row} ${Z.nrows > 1 ? r : ""}</div>`;
+      for (let c = 1; c <= nc; c++) {
+        const z = Z.cells.find(x => x.col === c && x.row === r);
+        if (!z || z.m2 === 0) { h += `<div></div>`; continue; }
+        const v = A ? z.after : z.flown;
+        h += `<button class="cell" data-c="${c}" data-r="${r}" style="background:${shade(v)};color:${v > 55 ? "#111" : "#f2efe9"}"><div class="p">${fmt(v, 0)}%</div><div class="a">${fmt(z.m2, 0)} m²</div></button>`;
       }
       h += `</div>`;
     }
     el.innerHTML = h;
-    el.querySelectorAll(".cell").forEach(b => b.onclick = () => { goTo(+b.dataset.b, +b.dataset.l); $("stage").scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "center" }); });
+    el.querySelectorAll(".cell").forEach(b => b.onclick = () => { goZone(+b.dataset.c, +b.dataset.r); $("stage").scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "center" }); });
   }
-
   function maps() {
-    const A = mode === "after";
+    $("sec-maps").hidden = K.k !== "kanat"; if (K.k !== "kanat") return;
+    const A = mode === "after", L = G.inner[1][0] - G.inner[0][0], H = G.inner[1][2] - G.inner[0][2], W = G.inner[1][1];
     const draw = (el, sel, sumEl) => {
-      const W = 1000, sx = W / G.L, Hh = G.H * sx, pad = 26, H = Hh + pad * 2;
-      let r = "", n = 0, ok = 0;
+      const Wd = 1000, sx = Wd / L, Hh = H * sx, pad = 26, Ht = Hh + pad * 2; let r = "", n = 0, ok = 0;
       for (const t of G.tiles) {
-        if (!sel(t)) continue;
-        const code = A ? t[7] : t[6]; if (code === 4) continue;
-        n++; if (code === 0) ok++;
-        const x = (t[0] - t[4] / 2) * sx + pad, y = pad + (G.H - t[2] - t[5] / 2) * sx;
-        r += `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${(t[4] * sx + .4).toFixed(1)}" height="${(t[5] * sx + .4).toFixed(1)}" fill="${[HEX.ok, HEX.soft, HEX.miss][code]}"/>`;
+        if (!sel(t)) continue; const code = A ? t[7] : t[6]; if (code === 4) continue; n++; if (code === 0) ok++;
+        r += `<rect x="${((t[0] - t[4] / 2) * sx + pad).toFixed(1)}" y="${(pad + (H - t[2] - t[5] / 2) * sx).toFixed(1)}" width="${(t[4] * sx + .4).toFixed(1)}" height="${(t[5] * sx + .4).toFixed(1)}" fill="${[HEX.ok, HEX.soft, HEX.miss][code]}"/>`;
       }
       let g = "";
-      G.bx.slice(1, -1).forEach((x, i) => { const X = pad + x * sx; g += `<line x1="${X}" y1="${pad}" x2="${X}" y2="${pad + Hh}" stroke="#0e0e0e" stroke-width="2" stroke-dasharray="6 4"/><text x="${X}" y="${pad - 8}" text-anchor="middle">BHD ${i + 1}</text>`; });
-      G.bz.slice(1, -1).forEach((z, i) => { const Y = pad + (G.H - z) * sx; g += `<line x1="${pad}" y1="${Y}" x2="${pad + G.L * sx}" y2="${Y}" stroke="#0e0e0e" stroke-width="2" stroke-dasharray="6 4"/><text x="${pad + G.L * sx + 6}" y="${Y + 4}">STR ${i + 1}</text>`; });
-      g += `<text x="${pad}" y="${H - 6}">AFT</text><text x="${pad + G.L * sx}" y="${H - 6}" text-anchor="end">FWD</text>`;
-      el.innerHTML = `<svg viewBox="0 0 ${W + pad * 2 + 50} ${H}" role="img" aria-label="Unfolded wall map" style="font:500 11px JetBrains Mono, monospace;fill:#9a968e"><rect x="${pad}" y="${pad}" width="${G.L * sx}" height="${Hh}" fill="#262626"/>${r}${g}</svg>`;
+      G.zones.bx.slice(1, -1).forEach((x, i) => { const X = pad + x * sx; g += `<line x1="${X}" y1="${pad}" x2="${X}" y2="${pad + Hh}" stroke="#0e0e0e" stroke-width="2" stroke-dasharray="6 4"/><text x="${X}" y="${pad - 8}" text-anchor="middle">BHD ${i + 1}</text>`; });
+      G.zones.bz.slice(1, -1).forEach((z, i) => { const Y = pad + (H - z) * sx; g += `<line x1="${pad}" y1="${Y}" x2="${pad + L * sx}" y2="${Y}" stroke="#0e0e0e" stroke-width="2" stroke-dasharray="6 4"/><text x="${pad + L * sx + 6}" y="${Y + 4}">STR ${i + 1}</text>`; });
+      g += `<text x="${pad}" y="${Ht - 6}">AFT</text><text x="${pad + L * sx}" y="${Ht - 6}" text-anchor="end">FWD</text>`;
+      el.innerHTML = `<svg viewBox="0 0 ${Wd + pad * 2 + 50} ${Ht}" role="img" aria-label="Unfolded wall map" style="font:500 11px JetBrains Mono, monospace;fill:#9a968e"><rect x="${pad}" y="${pad}" width="${L * sx}" height="${Hh}" fill="#262626"/>${r}${g}</svg>`;
       sumEl.textContent = `${fmt(100 * ok / Math.max(1, n))} % inspected`;
     };
-    // outboard shell = the y = 0 plate's inner (+y) face; inboard bulkhead = the y = W plate's inner (-y) face
     draw($("m1"), t => t[3] === 3 && Math.abs(t[1]) < 0.02, $("m1-s"));
-    draw($("m2"), t => t[3] === 2 && Math.abs(t[1] - G.W) < 0.02, $("m2-s"));
+    draw($("m2"), t => t[3] === 2 && Math.abs(t[1] - W) < 0.02, $("m2-s"));
   }
-
   function panels() {
     const S = D.summary, Q = D.settings.quality, Cm = D.settings.camera;
     $("t-fl").querySelector("tbody").innerHTML = D.flights.map(f => `<tr><td>${f.n}</td><td class="r">${f.count}</td><td class="r">${fmt(f.length_m, 0)} m</td><td class="r">${fmt(f.minutes)} min</td></tr>`).join("")
@@ -289,76 +298,76 @@ th { font: 500 10.5px var(--mono); letter-spacing: .1em; text-transform: upperca
   }
 
   // ------------------------------------------------------------------ 3D
-  function buildTank() {
+  function add(o) { scene.add(o); objs.push(o); return o; }
+  function clearScene() {
+    objs.forEach(o => { scene.remove(o); o.traverse(c => { if (c.geometry) c.geometry.dispose(); }); }); objs = []; shellGroup = [];
+  }
+  function buildModel() {
     const steel = new THREE.MeshStandardMaterial({ color: 0x8a8f96, metalness: 0.45, roughness: 0.5 });
     const edgeMat = new THREE.LineBasicMaterial({ color: 0x2a2c30 });
-    G.boxes.forEach((b, i) => {
+    G.boxes.forEach(b => {
       const s = [b[3] - b[0], b[4] - b[1], b[5] - b[2]].map(v => Math.max(v, 0.03));
       const m = new THREE.Mesh(new THREE.BoxGeometry(s[0], s[1], s[2]), steel);
       m.position.set((b[0] + b[3]) / 2, (b[1] + b[4]) / 2, (b[2] + b[5]) / 2); m.castShadow = true; m.receiveShadow = true;
-      const e = new THREE.LineSegments(new THREE.EdgesGeometry(m.geometry), edgeMat); m.add(e);
-      scene.add(m); if (b[4] <= 0.001 && b[1] < -0.1) shellGroup.push(m);       // near side shell plate
+      m.add(new THREE.LineSegments(new THREE.EdgesGeometry(m.geometry), edgeMat));
+      add(m); if (b[6]) shellGroup.push(m);
     });
-    // coloured wall tiles, 3 mm proud of the steel
     const n = G.tiles.length, pos = new Float32Array(n * 12), nor = new Float32Array(n * 12), col = new Float32Array(n * 12).fill(1);
-    const cf = new Float32Array(n * 4), ca = new Float32Array(n * 4), tf = new Float32Array(n * 4), ta = new Float32Array(n * 4), idx = new Uint32Array(n * 6);
-    const shellTile = new Uint8Array(n);
+    const cf = new Float32Array(n * 4), ca = new Float32Array(n * 4), tf = new Float32Array(n * 4), ta = new Float32Array(n * 4);
+    const keep = [], shell = [];
     G.tiles.forEach((t, i) => {
-      const ax = t[3] >> 1, sg = (t[3] & 1) ? 1 : -1, u = [1, 0, 0][ax] === 1 ? 1 : 0;
-      const axes = [0, 1, 2].filter(a => a !== ax), c = [t[0], t[1], t[2]]; c[ax] += sg * 0.004;
-      const corners = [[-1, -1], [1, -1], [1, 1], [-1, 1]];
-      corners.forEach((q, k) => {
+      const ax = t[3] >> 1, sg = (t[3] & 1) ? 1 : -1, axes = [0, 1, 2].filter(a => a !== ax), c = [t[0], t[1], t[2]]; c[ax] += sg * 0.004;
+      [[-1, -1], [1, -1], [1, 1], [-1, 1]].forEach((q, k) => {
         const p = c.slice(); p[axes[0]] += q[0] * t[4] / 2; p[axes[1]] += q[1] * t[5] / 2;
         pos.set(p, (4 * i + k) * 3); const nn = [0, 0, 0]; nn[ax] = sg; nor.set(nn, (4 * i + k) * 3);
         cf[4 * i + k] = t[6]; ca[4 * i + k] = t[7]; tf[4 * i + k] = t[8] >= 0 ? t[8] / tMax : -1; ta[4 * i + k] = t[9];
       });
-      idx.set([4 * i, 4 * i + 1, 4 * i + 2, 4 * i, 4 * i + 2, 4 * i + 3], 6 * i);
-      if (t[1] < -0.01 || (t[3] === 3 && Math.abs(t[1]) < 0.002)) shellTile[i] = 1;
+      (t[11] ? shell : keep).push(4 * i, 4 * i + 1, 4 * i + 2, 4 * i, 4 * i + 2, 4 * i + 3);
     });
     const g = new THREE.BufferGeometry();
     g.setAttribute("position", new THREE.BufferAttribute(pos, 3)); g.setAttribute("normal", new THREE.BufferAttribute(nor, 3)); g.setAttribute("color", new THREE.BufferAttribute(col, 3));
     g.setAttribute("cf", new THREE.BufferAttribute(cf, 1)); g.setAttribute("ca", new THREE.BufferAttribute(ca, 1)); g.setAttribute("tf", new THREE.BufferAttribute(tf, 1)); g.setAttribute("ta", new THREE.BufferAttribute(ta, 1));
-    g.setIndex(new THREE.BufferAttribute(idx, 1));
-    tileMat = new THREE.MeshStandardMaterial({ vertexColors: true, metalness: 0.05, roughness: 0.75, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -2 });
-    tileMat.userData.u = { uF: { value: 0 }, uA: { value: 0 }, uMode: { value: 0 }, uHideShell: { value: 1 } };
-    tileMat.onBeforeCompile = sh => {
-      Object.assign(sh.uniforms, tileMat.userData.u);
-      sh.vertexShader = sh.vertexShader.replace("#include <common>", `#include <common>
-        attribute float cf; attribute float ca; attribute float tf; attribute float ta;
-        uniform float uF; uniform float uA; uniform float uMode;`)
-        .replace("#include <color_vertex>", `#include <color_vertex>
-        vec3 OK = vec3(1.0, 0.98, 0.93), SOFT = vec3(0.21, 0.43, 0.91), MISS = vec3(0.03, 0.12, 0.78), STEEL = vec3(0.25, 0.27, 0.30);
-        vec3 c;
-        if (cf > 3.5) c = STEEL;
-        else {
-          // pilot's flight: everything starts "not inspected"; a wall turns white at the moment it was imaged sharply
-          bool seenF = cf < 0.5 && tf >= 0.0 && tf <= uF;
-          c = seenF ? OK : MISS;
-          if (uF >= 0.999 && cf > 0.5 && cf < 1.5) c = SOFT;
-          float fl = (cf < 0.5 && tf >= 0.0) ? max(0.0, 1.0 - (uF - tf) * 60.0) : 0.0;
-          if (seenF) c += vec3(0.6) * fl;
-          if (uMode > 0.5) {
-            bool fixedR = ca < 0.5 && cf > 0.5 && ta >= 0.0 && ta <= uA;
-            if (fixedR) { c = OK; c += vec3(0.6) * max(0.0, 1.0 - (uA - ta) * 50.0); }
+    const all = new Uint32Array(keep.length + shell.length); all.set(keep); all.set(shell, keep.length);
+    g.setIndex(new THREE.BufferAttribute(all, 1)); g.addGroup(0, keep.length, 0); g.addGroup(keep.length, shell.length, 1);
+    if (!tileMat) {
+      tileMat = new THREE.MeshStandardMaterial({ vertexColors: true, metalness: 0.05, roughness: 0.75, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -2 });
+      tileMat.userData.u = { uF: { value: 0 }, uA: { value: 0 }, uMode: { value: 0 } };
+      tileMat.onBeforeCompile = sh => {
+        Object.assign(sh.uniforms, tileMat.userData.u);
+        sh.vertexShader = sh.vertexShader.replace("#include <common>", `#include <common>
+          attribute float cf; attribute float ca; attribute float tf; attribute float ta;
+          uniform float uF; uniform float uA; uniform float uMode;`)
+          .replace("#include <color_vertex>", `#include <color_vertex>
+          vec3 OK = vec3(1.0, 0.98, 0.93), SOFT = vec3(0.21, 0.43, 0.91), MISS = vec3(0.03, 0.12, 0.78), STEEL = vec3(0.25, 0.27, 0.30);
+          vec3 c;
+          if (cf > 3.5) c = STEEL;
+          else {
+            bool seenF = cf < 0.5 && tf >= 0.0 && tf <= uF;
+            c = seenF ? OK : MISS;
+            if (uF >= 0.999 && cf > 0.5 && cf < 1.5) c = SOFT;
+            if (seenF) c += vec3(0.6) * max(0.0, 1.0 - (uF - tf) * 60.0);
+            if (uMode > 0.5) {
+              bool fixedR = ca < 0.5 && cf > 0.5 && ta >= 0.0 && ta <= uA;
+              if (fixedR) { c = OK + vec3(0.6) * max(0.0, 1.0 - (uA - ta) * 50.0); }
+            }
           }
-        }
-        vColor = c;`);
-    };
-    const tiles = new THREE.Mesh(g, tileMat); tiles.receiveShadow = false; scene.add(tiles);
-    // the near shell's own tiles are hidden with it through a second index range
-    const keep = [], shell = [];
-    for (let i = 0; i < n; i++) (shellTile[i] ? shell : keep).push(4 * i, 4 * i + 1, 4 * i + 2, 4 * i, 4 * i + 2, 4 * i + 3);
-    const all = new Uint32Array(keep.length + shell.length); all.set(keep); all.set(shell, keep.length); g.setIndex(new THREE.BufferAttribute(all, 1));
-    g.addGroup(0, keep.length, 0); g.addGroup(keep.length, shell.length, 1);
+          vColor = c;`);
+      };
+    }
     const hiddenMat = tileMat.clone(); hiddenMat.onBeforeCompile = tileMat.onBeforeCompile; hiddenMat.userData = tileMat.userData; hiddenMat.visible = false;
-    tiles.material = [tileMat, hiddenMat]; tiles.userData.shellMat = hiddenMat;
-    return tiles;
-  }
+    tilesMesh = add(new THREE.Mesh(g, [tileMat, hiddenMat])); tilesMesh.userData.shellMat = hiddenMat;
 
+    pp = G.flight.map(r => new THREE.Vector3(r[1], r[2], r[3]));
+    pathLine = add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pp), new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.55 })));
+    pathLine.geometry.setDrawRange(0, 1);
+    routePts = D.route.map(r => new THREE.Vector3(r[1], r[2], r[3])); routeCum = [0];
+    for (let i = 1; i < routePts.length; i++) routeCum.push(routeCum[i - 1] + routePts[i].distanceTo(routePts[i - 1]));
+    routeLine = add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(routePts.length ? routePts : [new THREE.Vector3()]), new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.55 })));
+    routeLine.visible = false; routeLine.geometry.setDrawRange(0, 1);
+  }
   function buildDrone() {
     const d = new THREE.Group();
-    const cage = new THREE.LineSegments(new THREE.WireframeGeometry(new THREE.IcosahedronGeometry(0.28, 1)), new THREE.LineBasicMaterial({ color: 0xdedbd4, transparent: true, opacity: 0.55 }));
-    d.add(cage);
+    d.add(new THREE.LineSegments(new THREE.WireframeGeometry(new THREE.IcosahedronGeometry(0.28, 1)), new THREE.LineBasicMaterial({ color: 0xdedbd4, transparent: true, opacity: 0.55 })));
     const dark = new THREE.MeshStandardMaterial({ color: 0x1b1c1f, metalness: 0.3, roughness: 0.6 });
     d.add(new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.12, 0.06), dark));
     const rotors = [];
@@ -368,30 +377,44 @@ th { font: 500 10.5px var(--mono); letter-spacing: .1em; text-transform: upperca
       r.rotation.x = Math.PI / 2; r.position.set(a * 0.13, b * 0.13, 0.04); d.add(r); rotors.push(r);
     });
     const led = new THREE.Mesh(new THREE.SphereGeometry(0.025, 12, 8), new THREE.MeshBasicMaterial({ color: 0xffffff })); led.position.set(0.09, 0, 0); d.add(led);
-    spot = new THREE.SpotLight(0xfff4e6, 2.4, 6, 0.5, 0.55, 1.2); spot.position.set(0.1, 0, 0); d.add(spot); d.add(spot.target); spot.target.position.set(2, 0, 0);
-    // translucent cone = what the camera looks at
+    const spot = new THREE.SpotLight(0xfff4e6, 2.4, 6, 0.5, 0.55, 1.2); spot.position.set(0.1, 0, 0); d.add(spot); d.add(spot.target); spot.target.position.set(2, 0, 0);
     const cone = new THREE.Mesh(new THREE.ConeGeometry(0.9, 1.8, 24, 1, true), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.07, depthWrite: false, side: THREE.DoubleSide }));
     cone.rotation.z = Math.PI / 2; cone.position.set(1.0, 0, 0); d.add(cone);
     d.userData.rotors = rotors; d.scale.setScalar(1.25);
     return d;
   }
-
-  function poseFlown(p) {   // p 0..1 of the logged flight
+  function poseFlown(p) {
     const T = p * tMax; let lo = 0, hi = flight.length - 1;
     while (hi - lo > 1) { const m = (lo + hi) >> 1; if (flight[m][0] <= T) lo = m; else hi = m; }
-    const a = flight[lo], b = flight[hi], f = b[0] > a[0] ? (T - a[0]) / (b[0] - a[0]) : 0;
-    const lerp = (i) => a[i] + (b[i] - a[i]) * f;
+    const a = flight[lo], b = flight[hi], f = b[0] > a[0] ? Math.min(1, Math.max(0, (T - a[0]) / (b[0] - a[0]))) : 0, lerp = i => a[i] + (b[i] - a[i]) * f;
     let dy = b[4] - a[4]; if (dy > 180) dy -= 360; if (dy < -180) dy += 360;
     return [lerp(1), lerp(2), lerp(3), a[4] + dy * f, lerp(5)];
   }
   function poseRoute(p) {
+    if (routePts.length < 2) return poseFlown(0);
     const L = routeCum[routeCum.length - 1] * p; let i = 1; while (i < routeCum.length - 1 && routeCum[i] < L) i++;
     const a = routePts[i - 1], b = routePts[i], f = (L - routeCum[i - 1]) / Math.max(1e-6, routeCum[i] - routeCum[i - 1]);
-    const x = a.x + (b.x - a.x) * f, y = a.y + (b.y - a.y) * f, z = a.z + (b.z - a.z) * f;
-    const yaw = Math.atan2(b.y - a.y, b.x - a.x) * 180 / Math.PI;
-    return [x, y, z, yaw, -10];
+    return [a.x + (b.x - a.x) * f, a.y + (b.y - a.y) * f, a.z + (b.z - a.z) * f, Math.atan2(b.y - a.y, b.x - a.x) * 180 / Math.PI, -10];
   }
-
+  function frame() {
+    const lo = G.inner[0], hi = G.inner[1];
+    let ctr = new THREE.Vector3((lo[0] + hi[0]) / 2, (lo[1] + hi[1]) / 2, (lo[2] + hi[2]) / 2);
+    let span = Math.max(hi[0] - lo[0], hi[2] - lo[2], (hi[1] - lo[1]) * 0.8), dir = new THREE.Vector3(-0.28, -0.92, 0.28).normalize(), f = 1.4;
+    if (K.k === "boru") { ctr = new THREE.Vector3(lo[0] + 14, ctr.y, ctr.z); span = 18; dir = new THREE.Vector3(-0.62, -0.68, 0.38).normalize(); f = 1.0; }
+    if (K.k === "tank") f = 1.9;
+    const dist = span / (2 * Math.tan(camera.fov * Math.PI / 360)) * (camera.aspect < 1 ? 1.6 : f);
+    tw = { t: 0, ft: controls.target.clone(), fp: camera.position.clone(), tt: ctr, tp: ctr.clone().addScaledVector(dir, dist) };
+    controls.maxDistance = Math.max(dist * 3, 120);
+  }
+  function goZone(c, r) {
+    const z = G.zones.cells.find(x => x.col === c && x.row === r), lo = G.inner[0], hi = G.inner[1];
+    let x = (lo[0] + hi[0]) / 2, y = (lo[1] + hi[1]) / 2;
+    if (K.k === "kanat") x = (G.zones.bx[c - 1] + G.zones.bx[c]) / 2;
+    if (K.k === "boru") x = lo[0] + (hi[0] - lo[0]) * (c - 0.5) / G.zones.cols.length;
+    const zc = (z.z[0] + z.z[1]) / 2, back = Math.max(6.5, (hi[1] - lo[1]) * 1.4);
+    tw = { t: 0, ft: controls.target.clone(), fp: camera.position.clone(), tt: new THREE.Vector3(x, y, zc), tp: new THREE.Vector3(x - 2.2, y - back, zc + 1.8) };
+    $("c-follow").checked = follow = false;
+  }
   function setMode(m) {
     mode = m; $("b-flown").setAttribute("aria-pressed", m === "flown"); $("b-after").setAttribute("aria-pressed", m === "after");
     texts(); if (!tileMat) return;
@@ -400,71 +423,47 @@ th { font: 500 10.5px var(--mono); letter-spacing: .1em; text-transform: upperca
     else { pathLine.visible = $("c-path").checked; routeLine.visible = false; }
     prog = reduce ? 1 : 0; playing = true;
   }
-
-  function goTo(bay, level) {
-    const x = (G.bx[bay - 1] + G.bx[bay]) / 2, z = (G.bz[level - 1] + G.bz[level]) / 2;
-    tween(new THREE.Vector3(x, G.W / 2, z), new THREE.Vector3(x - 2.2, -6.5, z + 1.8));
-    $("c-follow").checked = follow = false;
+  function setShell(on) {
+    shellGroup.forEach(m => m.visible = on); if (tilesMesh) tilesMesh.userData.shellMat.visible = on;
+    const o = G.olcu, dims = K.k === "kanat" ? `${fmt(o.L)} × ${fmt(o.W)} × ${fmt(o.H)} M` : K.k === "kazan" ? `${fmt(o.W)} × ${fmt(o.D)} × ${fmt(o.H)} M` : K.k === "tank" ? `Ø ${fmt(2 * o.R)} × ${fmt(o.H)} M` : `Ø ${fmt(2 * o.r)} × ${fmt(o.L, 0)} M`;
+    $("st-l").textContent = `${G.name.toUpperCase()} · ${dims}` + (on ? "" : " · NEAR SIDE WALL REMOVED");
   }
-  let tw = null;
-  function tween(target, position) { tw = { t: 0, ft: controls.target.clone(), fp: camera.position.clone(), tt: target, tp: position }; }
+  function prepare() {
+    tMax = Math.max(1e-6, G.flight[G.flight.length - 1][0]); flight = G.flight; nP = D.s.length;
+    fSorted = D.s.map((s, i) => (s <= 1 && D.t[i] != null) ? D.t[i] / tMax : null).filter(v => v != null).sort((a, b) => a - b);
+    const seen = new Set(); missingSorted = [];
+    G.tiles.forEach(t => { if (t[10] >= 0 && t[9] >= 0 && !seen.has(t[10])) { seen.add(t[10]); missingSorted.push(t[9]); } });
+    missingSorted.sort((a, b) => a - b);
+  }
 
-  function init(model) {
-    G = model; tMax = G.flight[G.flight.length - 1][0]; flight = G.flight;
+  function init() {
     const canvas = $("gl"), stage = $("stage");
     renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
     renderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));
-    renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-    renderer.outputEncoding = THREE.sRGBEncoding; renderer.toneMapping = THREE.NoToneMapping;
+    renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap; renderer.outputEncoding = THREE.sRGBEncoding;
     scene = new THREE.Scene();
-    camera = new THREE.PerspectiveCamera(34, 1, 0.05, 300); camera.up.set(0, 0, 1);
+    camera = new THREE.PerspectiveCamera(34, 1, 0.05, 600); camera.up.set(0, 0, 1);
     scene.add(new THREE.HemisphereLight(0xf4f1ea, 0x3a3c40, 0.9));
-    const sun = new THREE.DirectionalLight(0xffffff, 1.1); sun.position.set(-10, -22, 30); sun.castShadow = true;
-    sun.shadow.mapSize.set(2048, 2048); sun.shadow.bias = -0.0004; sun.shadow.normalBias = 0.03; Object.assign(sun.shadow.camera, { left: -14, right: 14, top: 14, bottom: -14, near: 1, far: 80 });
-    sun.target.position.set(G.L / 2, G.W / 2, G.H / 2); scene.add(sun, sun.target);
+    const sun = new THREE.DirectionalLight(0xffffff, 1.1); sun.castShadow = true; sun.shadow.mapSize.set(2048, 2048); sun.shadow.bias = -0.0004; sun.shadow.normalBias = 0.03;
+    scene.add(sun, sun.target); scene.userData.sun = sun;
     const rim = new THREE.DirectionalLight(0xbcd0ff, 0.35); rim.position.set(30, 20, 10); scene.add(rim);
-
-    const tiles = buildTank();
-    const pp = G.flight.map(r => new THREE.Vector3(r[1], r[2], r[3]));
-    pathLine = new THREE.Line(new THREE.BufferGeometry().setFromPoints(pp), new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.55 }));
-    pathLine.geometry.setDrawRange(0, 1); scene.add(pathLine);
-    routePts = D.route.map(r => new THREE.Vector3(r[1], r[2], r[3])); routeCum = [0];
-    for (let i = 1; i < routePts.length; i++) routeCum.push(routeCum[i - 1] + routePts[i].distanceTo(routePts[i - 1]));
-    routeLine = new THREE.Line(new THREE.BufferGeometry().setFromPoints(routePts), new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.55 }));
-    routeLine.visible = false; routeLine.geometry.setDrawRange(0, 1); scene.add(routeLine);
     drone = buildDrone(); scene.add(drone);
-
-    const ctr = new THREE.Vector3(G.L / 2, G.W / 2, G.H / 2 - 0.5);
-    camera.position.set(ctr.x - 9, ctr.y - 31, ctr.z + 7);
-    controls = new THREE.OrbitControls(camera, canvas); controls.target.copy(ctr); controls.enableDamping = true; controls.dampingFactor = 0.07;
-    controls.minDistance = 2; controls.maxDistance = 80;
+    controls = new THREE.OrbitControls(camera, canvas); controls.enableDamping = true; controls.dampingFactor = 0.07; controls.minDistance = 2;
     controls.addEventListener("start", () => { tw = null; });
     const resize = () => { const w = stage.clientWidth, h = stage.clientHeight; renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); };
     new ResizeObserver(resize).observe(stage); resize();
-
-    const setShell = on => { shellGroup.forEach(m => m.visible = on); tiles.userData.shellMat.visible = on; $("st-l").textContent = `PORT WING BALLAST TANK · ${fmt(G.L)} × ${fmt(G.W)} × ${fmt(G.H)} M` + (on ? "" : " · NEAR SIDE SHELL REMOVED"); };
-    setShell(false);
     $("c-shell").onchange = e => setShell(e.target.checked);
     $("c-path").onchange = e => { if (mode === "after") routeLine.visible = e.target.checked; else pathLine.visible = e.target.checked; };
     $("c-follow").onchange = e => { follow = e.target.checked; tw = null; };
     $("replay").onclick = () => { prog = 0; playing = true; };
-
-    const fSorted = D.s.map((s, i) => (s <= 1 && D.t[i] != null) ? D.t[i] / tMax : null).filter(v => v != null).sort((a, b) => a - b);
-    const nP = D.s.length, base = D.s.filter(s => s <= 1).length, missingSorted = [];
-    // re-fly reveal order per patch from the tiles (same order the 3D uses)
-    const seen = new Set();
-    G.tiles.forEach(t => { if (t[10] >= 0 && t[9] >= 0 && !seen.has(t[10])) { seen.add(t[10]); missingSorted.push(t[9]); } });
-    missingSorted.sort((a, b) => a - b);
-    const target = D.summary.after_refly_pct, add = target - 100 * base / nP;
     const upper = (arr, v) => { let lo = 0, hi = arr.length; while (lo < hi) { const m = (lo + hi) >> 1; if (arr[m] <= v) lo = m + 1; else hi = m; } return lo; };
-
-    const clock = new THREE.Clock(); let started = false;
+    const clock = new THREE.Clock();
     renderer.setAnimationLoop(() => {
       const dt = Math.min(clock.getDelta(), 0.05), el = clock.elapsedTime;
+      if (!G) return;
       if (!started && (el > (reduce ? 0 : 3.4) || intro.hidden)) { started = true; playing = true; if (reduce) prog = 1; }
       if (started && playing) { prog = Math.min(1, prog + dt / (mode === "after" ? REFLY_S : FLY_S)); if (prog >= 1) playing = false; }
-      const u = tileMat.userData.u;
-      let pct, pose;
+      const u = tileMat.userData.u; let pct, pose;
       if (mode === "flown") {
         u.uF.value = prog; pose = poseFlown(Math.min(prog, 0.9999));
         pathLine.geometry.setDrawRange(0, Math.max(1, Math.floor(pp.length * prog)));
@@ -473,25 +472,40 @@ th { font: 500 10.5px var(--mono); letter-spacing: .1em; text-transform: upperca
         u.uA.value = prog; pose = poseRoute(Math.min(prog, 0.9999));
         routeLine.geometry.setDrawRange(0, Math.max(1, Math.floor(routePts.length * prog)));
         const frac = missingSorted.length ? upper(missingSorted, prog) / missingSorted.length : 1;
-        pct = prog >= 1 ? target : D.summary.inspected_pct + add * frac;
+        pct = prog >= 1 ? D.summary.after_refly_pct : D.summary.inspected_pct + (D.summary.after_refly_pct - D.summary.inspected_pct) * frac;
       }
       $("cnt").textContent = fmt(pct) + " %"; $("cnt-bar").style.width = pct + "%";
-      drone.position.set(pose[0], pose[1], pose[2]);
-      drone.rotation.set(0, -pose[4] * Math.PI / 180, pose[3] * Math.PI / 180, "ZYX");
+      drone.position.set(pose[0], pose[1], pose[2]); drone.rotation.set(0, -pose[4] * Math.PI / 180, pose[3] * Math.PI / 180, "ZYX");
       drone.userData.rotors.forEach((r, i) => r.rotation.y += (i % 2 ? 1 : -1) * 0.9);
       if (follow) { const want = drone.position.clone().add(new THREE.Vector3(-2.5, -5.5, 2.2)); camera.position.lerp(want, 0.06); controls.target.lerp(drone.position, 0.12); }
       if (tw) { tw.t = Math.min(1, tw.t + dt / 1.2); const e = tw.t < .5 ? 2 * tw.t * tw.t : 1 - Math.pow(-2 * tw.t + 2, 2) / 2; controls.target.lerpVectors(tw.ft, tw.tt, e); camera.position.lerpVectors(tw.fp, tw.tp, e); if (tw.t >= 1) tw = null; }
       controls.update(); renderer.render(scene, camera);
     });
-    $("loading").hidden = true;
   }
 
-  $("b-flown").onclick = () => setMode("flown"); $("b-after").onclick = () => setMode("after");
-  Promise.all([fetch("data.json").then(r => r.json()), fetch("model.json").then(r => r.json())]).then(([d, m]) => {
-    D = d; G = m; texts(); panels();
+  function show(first) {
+    prepare(); texts(); panels();
     if (!window.THREE || !THREE.OrbitControls) { $("loading").textContent = "3D VIEW UNAVAILABLE IN THIS BROWSER"; return; }
-    init(m);
-  }).catch(e => { console.error(e); $("loading").textContent = "COULD NOT LOAD THE TANK. RELOAD TO TRY AGAIN."; });
+    if (!renderer) init();
+    clearScene(); buildModel();
+    const lo = G.inner[0], hi = G.inner[1], sun = scene.userData.sun, span = Math.max(hi[0] - lo[0], hi[1] - lo[1], hi[2] - lo[2]);
+    sun.position.set(lo[0] - span * 0.4, lo[1] - span * 1.2, hi[2] + span * 0.8); sun.target.position.set((lo[0] + hi[0]) / 2, (lo[1] + hi[1]) / 2, (lo[2] + hi[2]) / 2);
+    Object.assign(sun.shadow.camera, { left: -span * 0.8, right: span * 0.8, top: span * 0.8, bottom: -span * 0.8, near: 1, far: span * 4 }); sun.shadow.camera.updateProjectionMatrix();
+    $("c-shell").checked = false; setShell(false);
+    if (first) { const c = new THREE.Vector3((lo[0] + hi[0]) / 2, (lo[1] + hi[1]) / 2, (lo[2] + hi[2]) / 2); controls.target.copy(c); camera.position.copy(c).add(new THREE.Vector3(-10, -40, 10)); }
+    frame(); mode = "flown"; setMode("flown");
+    $("loading").hidden = true;
+  }
+  function load(k) {
+    K = KINDS.find(x => x.k === k);
+    $("picker").querySelectorAll("button").forEach(b => b.setAttribute("aria-selected", b.dataset.k === k));
+    $("loading").hidden = false; $("loading").textContent = "LOADING MODEL…";
+    const first = !G;
+    const p = cache[k] || (cache[k] = Promise.all([fetch(`data_${k}.json`).then(r => r.json()), fetch(`model_${k}.json`).then(r => r.json())]));
+    p.then(([d, m]) => { D = d; G = m; show(first); }).catch(e => { console.error(e); $("loading").textContent = "COULD NOT LOAD THE MODEL. RELOAD TO TRY AGAIN."; });
+  }
+  $("b-flown").onclick = () => setMode("flown"); $("b-after").onclick = () => setMode("after");
+  load("kanat");
 })();
 </script>
 
