@@ -1,0 +1,499 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SYNEX Tank Coverage</title>
+<meta name="description" content="Sample SYNEX Coverage Check report on a simulated ship ballast tank.">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: SYNEX brand (black, off-white) with blue for "not inspected". Logo intro, then findings column + live 3D tank with the drone flying; then compartment map, wall maps, plan, method. Single dark theme on purpose. */
+:root {
+  color-scheme: dark;
+  --bg: #0e0e0e; --panel: #141414; --line: #262626; --ink: #f2efe9; --muted: #9a968e;
+  --ok: #f2f0ea; --soft: #7fb0f5; --miss: #1f4fd1; --steel: #8a8f96;
+  --display: "Anton", "Impact", "Arial Narrow", sans-serif;
+  --body: "Inter", "Segoe UI", Roboto, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+* { box-sizing: border-box }
+html, body { background: var(--bg); margin: 0 }
+body { color: var(--ink); font-family: var(--body); font-size: 15px; line-height: 1.55; padding-block: 0 56px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)) }
+[hidden] { display: none !important }
+
+#intro { position: fixed; inset: 0; z-index: 50; background: var(--bg); display: grid; place-items: center; cursor: pointer; animation: introOut .7s ease 2.6s forwards }
+#intro .in { display: flex; align-items: center; gap: 28px }
+#intro img { width: min(34vw, 190px); height: auto; clip-path: inset(0 100% 0 0); animation: draw 1.1s cubic-bezier(.7,0,.2,1) .2s forwards, glow 1.4s ease 1.2s forwards }
+#intro .word { font: 400 clamp(40px, 9vw, 92px)/1 var(--display); letter-spacing: .3em; display: flex }
+#intro .word span { opacity: 0; transform: translateY(14px); animation: up .5s ease forwards }
+@keyframes draw { to { clip-path: inset(0 0 0 0) } }
+@keyframes glow { 50% { filter: drop-shadow(0 0 22px rgba(242,239,233,.55)) } 100% { filter: none } }
+@keyframes up { to { opacity: 1; transform: none } }
+@keyframes introOut { to { opacity: 0; visibility: hidden } }
+@media (max-width: 520px) { #intro .in { flex-direction: column; gap: 18px } }
+
+.wrap { max-width: 1360px; margin: 0 auto }
+.hero { display: grid; grid-template-columns: 380px minmax(0, 1fr); gap: 28px; padding-block: 28px 8px; align-items: stretch }
+@media (max-width: 980px) { .hero { grid-template-columns: 1fr } }
+.side { display: flex; flex-direction: column; gap: 20px; min-width: 0 }
+.side > * { opacity: 0; transform: translateY(10px); animation: up .6s ease forwards }
+.brand { display: flex; align-items: center; gap: 14px }
+.live { position: relative; width: 58px; height: 47px; flex: none; animation: float 5s ease-in-out infinite }
+.live img { width: 100%; height: 100%; display: block }
+.live .shine { position: absolute; inset: 0; -webkit-mask: url(logo.png) center / contain no-repeat; mask: url(logo.png) center / contain no-repeat;
+  background: linear-gradient(105deg, transparent 35%, rgba(255,255,255,.95) 50%, transparent 65%) 0 0 / 300% 100% no-repeat; animation: shine 3.8s ease-in-out infinite }
+@keyframes shine { 0% { background-position: 120% 0 } 55%, 100% { background-position: -20% 0 } }
+@keyframes float { 50% { transform: translateY(-3px) } }
+.brand .name { font: 400 30px/1 var(--display); letter-spacing: .24em }
+.brand .sub { font: 500 10.5px var(--mono); letter-spacing: .18em; color: var(--muted); margin-top: 5px }
+h1 { font: 400 clamp(38px, 4.4vw, 58px)/1.0 var(--display); letter-spacing: .01em; margin: 0; text-transform: uppercase; text-wrap: balance }
+h1 .n { text-decoration: underline; text-decoration-thickness: 3px; text-underline-offset: 6px }
+.tag { font-size: 16.5px; color: var(--muted); margin: -4px 0 0; max-width: 36ch }
+.sim { align-self: flex-start; font: 500 11px var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--bg); background: var(--ink); padding: 5px 14px 5px 10px; clip-path: polygon(0 0, 100% 0, calc(100% - 8px) 50%, 100% 100%, 0 100%) }
+.seg { display: grid; grid-template-columns: 1fr 1fr; border: 1px solid var(--line); border-radius: 4px; overflow: hidden }
+.seg button { font: 600 14px var(--body); color: var(--muted); background: var(--panel); border: 0; padding: 12px 10px; cursor: pointer; transition: background .25s, color .25s }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--bg) }
+button:focus-visible, input:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px }
+.counter { display: grid; gap: 8px }
+.counter .big { font: 400 64px/1 var(--display); font-variant-numeric: tabular-nums }
+.counter .l { font: 500 10.5px var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--muted) }
+.bar { height: 4px; background: var(--line); border-radius: 2px; overflow: hidden } .bar i { display: block; height: 100%; width: 0; background: var(--ink) }
+.kpis { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 18px }
+.kpi .v { font: 400 30px/1 var(--display); font-variant-numeric: tabular-nums; letter-spacing: .02em }
+.kpi .l { font: 500 10.5px var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin-top: 6px }
+.legend { display: grid; gap: 8px; border-top: 1px solid var(--line); padding-top: 14px }
+.lg { display: grid; grid-template-columns: 16px 1fr auto; gap: 10px; align-items: center; font-size: 14px }
+.lg i { width: 16px; height: 16px; border-radius: 2px }
+.lg b { font: 500 13px var(--mono); color: var(--muted); font-weight: 500; font-variant-numeric: tabular-nums }
+
+.stage { position: relative; min-height: 580px; height: min(84vh, 820px); border: 1px solid var(--line); border-radius: 6px; overflow: hidden;
+  background: radial-gradient(90% 70% at 50% 35%, #1b1c1e 0%, #0e0e0e 70%); opacity: 0; animation: up .9s ease 2.9s forwards }
+@media (max-width: 980px) { .stage { height: 70vh; min-height: 440px } }
+#gl { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; cursor: grab }
+#gl:active { cursor: grabbing }
+.tools { position: absolute; top: 12px; left: 12px; right: 12px; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; pointer-events: none }
+.tools > * { pointer-events: auto }
+.chip { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 14px; font-size: 13px; color: var(--muted); background: rgba(14,14,14,.86); border: 1px solid var(--line); border-radius: 4px; padding: 7px 12px }
+.chip label { display: inline-flex; gap: 6px; align-items: center; cursor: pointer }
+.chip button { font: 600 13px var(--body); color: var(--ink); background: none; border: 0; cursor: pointer; padding: 0 }
+input[type=checkbox] { accent-color: var(--ink) }
+.status { position: absolute; left: 14px; bottom: 12px; right: 14px; display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; font: 500 11px var(--mono); letter-spacing: .1em; color: var(--muted); pointer-events: none }
+.loading { position: absolute; inset: 0; display: grid; place-items: center; font: 500 12px var(--mono); letter-spacing: .14em; color: var(--muted) }
+
+.steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); margin-top: 40px; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line) }
+.step { padding: 22px 22px 22px 0 }
+.step + .step { padding-left: 22px; border-left: 1px solid var(--line) }
+@media (max-width: 760px) { .step + .step { border-left: 0; padding-left: 0; border-top: 1px solid var(--line) } }
+.step .k { font: 400 26px var(--display); letter-spacing: .06em }
+.step h3 { font: 600 17px var(--body); margin: 4px 0 6px }
+.step p { color: var(--muted); margin: 0; max-width: 46ch }
+section.block { margin-top: 40px }
+h2 { font: 400 28px var(--display); letter-spacing: .05em; text-transform: uppercase; margin: 0 0 6px }
+.lede { color: var(--muted); margin: 0 0 18px; max-width: 72ch }
+.comp { display: grid; gap: 4px; overflow-x: auto }
+.comp .row { display: grid; grid-template-columns: 70px repeat(var(--bays), minmax(84px, 1fr)); gap: 4px; min-width: 560px }
+.comp .hd { font: 500 10.5px var(--mono); letter-spacing: .1em; color: var(--muted); display: grid; align-items: end; padding: 4px 6px }
+.cell { border: 0; border-radius: 3px; padding: 10px 10px 9px; text-align: left; cursor: pointer; font: inherit; color: inherit; transition: transform .15s }
+.cell:hover { transform: translateY(-1px) }
+.cell .p { font: 400 24px/1 var(--display); letter-spacing: .02em } .cell .a { font: 500 11px var(--mono); opacity: .8; margin-top: 4px }
+.maps { display: grid; gap: 22px }
+.map { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 16px 18px; min-width: 0 }
+.map h3 { font: 600 15px var(--body); margin: 0 0 10px; display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap }
+.map h3 span { font: 500 12px var(--mono); color: var(--muted); font-weight: 500 }
+.map .sv { overflow-x: auto } .map svg { display: block; min-width: 640px; width: 100% }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; margin-top: 40px }
+.box { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 20px 22px; min-width: 0 }
+.box h2 { font-size: 22px }
+p { margin: 0 0 10px; max-width: 68ch } p:last-child { margin-bottom: 0 }
+.muted { color: var(--muted) }
+table { width: 100%; border-collapse: collapse; font-size: 14px; font-variant-numeric: tabular-nums }
+th, td { text-align: left; padding: 7px 8px; border-bottom: 1px solid var(--line); white-space: nowrap }
+th { font: 500 10.5px var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--muted) }
+.r { text-align: right }
+.kv { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 6px 18px; font-size: 14px }
+.kv span:nth-child(odd) { color: var(--muted) }
+.kv span:nth-child(even) { font-family: var(--mono); font-size: 13px; text-align: right }
+.hash { font: 12px var(--mono); color: var(--muted); word-break: break-all }
+.tw { overflow-x: auto }
+.foot { color: var(--muted); font-size: 13px; margin-top: 24px }
+@media (prefers-reduced-motion: reduce) { #intro { display: none } .side > *, .stage { animation: none; opacity: 1; transform: none } .live, .live .shine { animation: none } }
+</style>
+</head>
+<body>
+
+
+<div id="intro" aria-hidden="true"><div class="in"><img src="logo.png" alt=""><div class="word"><span style="animation-delay:1.05s">S</span><span style="animation-delay:1.13s">Y</span><span style="animation-delay:1.21s">N</span><span style="animation-delay:1.29s">E</span><span style="animation-delay:1.37s">X</span></div></div></div>
+
+<div class="wrap">
+  <section class="hero">
+    <div class="side">
+      <div class="brand" style="animation-delay:2.9s"><div class="live"><img src="logo.png" alt="SYNEX logo"><div class="shine"></div></div><div><div class="name">SYNEX</div><div class="sub">COVERAGE CHECK</div></div></div>
+      <h1 id="headline" style="animation-delay:3.0s">Your pilot inspected <span class="n">19.9 %</span> of this tank</h1>
+      <p class="tag" id="tag" style="animation-delay:3.1s">Watch the flight: walls turn white only when the camera saw them sharp enough to inspect.</p>
+      <div class="sim" style="animation-delay:3.15s">Sample report · simulated tank and flight</div>
+      <div class="seg" role="group" aria-label="Scenario" style="animation-delay:3.2s">
+        <button id="b-flown" aria-pressed="true">Pilot's flight</button>
+        <button id="b-after" aria-pressed="false">+ SYNEX re-fly</button>
+      </div>
+      <div class="counter" style="animation-delay:3.3s">
+        <div class="big" id="cnt">0.0 %</div>
+        <div class="l" id="cnt-l">of the wall inspected so far</div>
+        <div class="bar"><i id="cnt-bar"></i></div>
+      </div>
+      <div class="kpis" id="kpis" style="animation-delay:3.4s"></div>
+      <div class="legend" style="animation-delay:3.5s">
+        <div class="lg"><i style="background:var(--ok)"></i><span>Inspected: sharp enough to judge the coating</span><b></b></div>
+        <div class="lg"><i style="background:var(--soft)"></i><span>Seen, but not sharp enough</span><b></b></div>
+        <div class="lg"><i style="background:var(--miss)"></i><span>Never in the camera's view</span><b></b></div>
+        <div class="lg"><i style="background:var(--steel)"></i><span>Steel edges and outside of the tank</span><b></b></div>
+      </div>
+    </div>
+    <div class="stage" id="stage">
+      <canvas id="gl" aria-label="3D model of the ballast tank with the drone flying inside"></canvas>
+      <div class="loading" id="loading">LOADING TANK…</div>
+      <div class="tools">
+        <div class="chip"><button id="replay">&#8635; Replay flight</button><label><input type="checkbox" id="c-follow"> Follow drone</label></div>
+        <div class="chip"><label><input type="checkbox" id="c-shell"> Near side shell</label><label><input type="checkbox" id="c-path" checked> Flight path</label></div>
+      </div>
+      <div class="status"><span id="st-l">PORT WING BALLAST TANK · 16.9 × 2.8 × 14.8 M · NEAR SIDE SHELL REMOVED</span><span>DRAG TO ROTATE · SCROLL TO ZOOM</span></div>
+    </div>
+  </section>
+
+  <div class="steps">
+    <div class="step"><div class="k">IN</div><h3>Your scan and flight log</h3><p>The point cloud and flight log your drone already records. No CAD drawing needed.</p></div>
+    <div class="step"><div class="k">24 H</div><h3>Every wall patch checked</h3><p>Distance, angle, field of view, occlusion, pixel size, motion blur and light, at five points per 0.5 m patch.</p></div>
+    <div class="step"><div class="k">OUT</div><h3>What was really inspected</h3><p>Compartment by compartment, wall by wall, with the frame that proves it and the exact points to re-fly.</p></div>
+  </div>
+
+  <section class="block">
+    <h2>Compartments</h2>
+    <p class="lede">Share of each compartment's walls inspected. Bays are numbered from the aft end, levels from the bottom. Click a compartment to fly the 3D view there.</p>
+    <div class="comp" id="comp"></div>
+  </section>
+
+  <section class="block">
+    <h2>Wall maps</h2>
+    <p class="lede">The two long walls unfolded flat, as on a shell expansion drawing. Dashed lines are the transverse bulkheads and stringer decks.</p>
+    <div class="maps">
+      <div class="map"><h3>Outboard side shell, inside face <span id="m1-s"></span></h3><div class="sv" id="m1"></div></div>
+      <div class="map"><h3>Inboard longitudinal bulkhead, tank side <span id="m2-s"></span></h3><div class="sv" id="m2"></div></div>
+      <div class="legend" style="border:0;padding:0;grid-template-columns:repeat(auto-fit,minmax(220px,1fr))"><div class="lg"><i style="background:var(--ok)"></i><span>Inspected</span><b></b></div><div class="lg"><i style="background:var(--soft)"></i><span>Seen, not sharp enough</span><b></b></div><div class="lg"><i style="background:var(--miss)"></i><span>Never in view</span><b></b></div><div class="lg"><i style="background:#262626;border:1px solid #333"></i><span>Structure joint, not assessed</span><b></b></div></div>
+    </div>
+  </section>
+
+  <div class="grid">
+    <section class="box">
+      <h2>Re-fly plan</h2>
+      <div class="tw"><table id="t-fl"><thead><tr><th>Flight</th><th class="r">Viewpoints</th><th class="r">Route</th><th class="r">Time</th></tr></thead><tbody></tbody></table></div>
+      <p class="muted" style="margin-top:12px;font-size:13px">Each flight starts and ends at the manhole and fits one battery with a 15 % reserve. Routes keep the cage radius plus a safety margin from every surface.</p>
+    </section>
+    <section class="box">
+      <h2>Method and accuracy</h2>
+      <p>A patch counts only when all of its check points pass. Patches that pass with the logged positions but fail with a 10 cm / 2° position error are marked uncertain and added to the re-fly plan.</p>
+      <p>On four simulated structures the engine was compared with the simulator's independent ground truth: at most 1.1 % of the patches it called covered were not fully seen. It has not yet been validated on customer field data.</p>
+      <div class="kv" id="t-set" style="margin-top:14px"></div>
+    </section>
+    <section class="box">
+      <h2>Provenance</h2>
+      <p class="muted" style="font-size:13px">Every report records the exact input files, so the result can be reproduced and audited.</p>
+      <div id="t-prov" style="display:grid;gap:10px"></div>
+    </section>
+  </div>
+  <p class="foot">Full coverage means every wall area was imaged at the stated quality. It does not mean every defect was found; the images are still assessed by a qualified inspector. The drone animation replays the logged flight at high speed.</p>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script>
+(function () {
+  const $ = id => document.getElementById(id);
+  const fmt = (v, d = 1) => Number(v).toLocaleString("en-US", { minimumFractionDigits: d, maximumFractionDigits: d });
+  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const intro = $("intro");
+  intro.addEventListener("click", () => { intro.style.animation = "introOut .3s ease forwards"; document.querySelectorAll(".side > *, .stage").forEach(e => e.style.animationDelay = "0s"); setTimeout(() => intro.hidden = true, 320); });
+  intro.addEventListener("animationend", e => { if (e.animationName === "introOut") intro.hidden = true; });
+  if (reduce) intro.hidden = true;
+
+  const HEX = { ok: "#f2f0ea", soft: "#7fb0f5", miss: "#1f4fd1", steel: "#8a8f96" };
+  const FLY_S = 30, REFLY_S = 32;           // animation lengths in seconds
+  let D, G, mode = "flown", renderer, scene, camera, controls, tileMat, shellGroup = [], pathLine, routeLine, drone, spot, follow = false;
+  let prog = 0, playing = false, tMax = 1, fTimes, rTimes, flight, routePts, routeCum;
+
+  // ------------------------------------------------------------------ text panels
+  function texts() {
+    const S = D.summary, A = mode === "after";
+    $("headline").innerHTML = A ? `With SYNEX re-fly: <span class="n">${fmt(S.after_refly_pct)} %</span> inspected` : `Your pilot inspected <span class="n">${fmt(S.inspected_pct)} %</span> of this tank`;
+    $("tag").textContent = A ? `${S.refly_points.toLocaleString("en-US")} extra viewpoints in ${S.refly_flights} short flights close the gaps. The blue walls turn white as the drone reaches them.`
+                             : "Watch the flight: walls turn white only when the camera saw them sharp enough to inspect.";
+    const k = A ? [[S.refly_points.toLocaleString("en-US"), "re-fly viewpoints"], [S.refly_flights + " × ~" + fmt(S.refly_minutes / S.refly_flights, 0) + " min", "short flights"], [fmt(S.after_refly_certain_pct) + "%", "certain under pose error"], [fmt(S.after_refly_angle_tiers_pct.ideal, 0) + "%", "seen at 0–25°"]]
+                 : [[fmt(S.seen_pct) + "%", "was in camera view"], [fmt(S.wall_m2 * (100 - S.inspected_pct) / 100, 0) + " m²", "not inspectable"], [fmt(S.wall_m2, 0) + " m²", "wall surface"], [String(G.comp.length), "compartments"]];
+    $("kpis").innerHTML = k.map(x => `<div class="kpi"><div class="v">${x[0]}</div><div class="l">${x[1]}</div></div>`).join("");
+    $("cnt-l").textContent = A ? "of the wall inspected after re-fly" : "of the wall inspected so far";
+    comp(); maps();
+  }
+
+  function shade(v) {   // 0..100 -> blue..white
+    const t = Math.max(0, Math.min(1, v / 100)), a = [31, 79, 209], b = [242, 240, 234];
+    return `rgb(${a.map((x, i) => Math.round(x + (b[i] - x) * t)).join(",")})`;
+  }
+  function comp() {
+    const A = mode === "after", nb = G.bx.length - 1, nl = G.bz.length - 1, el = $("comp");
+    el.style.setProperty("--bays", nb);
+    let h = `<div class="row"><div class="hd"></div>${Array.from({ length: nb }, (_, i) => `<div class="hd">BAY ${i + 1}</div>`).join("")}</div>`;
+    for (let l = nl; l >= 1; l--) {
+      h += `<div class="row"><div class="hd" style="align-items:center">LEVEL ${l}</div>`;
+      for (let b = 1; b <= nb; b++) {
+        const c = G.comp.find(x => x.bay === b && x.level === l), v = A ? c.after : c.flown, dark = v > 55;
+        h += `<button class="cell" data-b="${b}" data-l="${l}" style="background:${shade(v)};color:${dark ? "#111" : "#f2efe9"}"><div class="p">${fmt(v, 0)}%</div><div class="a">${fmt(c.m2, 0)} m²</div></button>`;
+      }
+      h += `</div>`;
+    }
+    el.innerHTML = h;
+    el.querySelectorAll(".cell").forEach(b => b.onclick = () => { goTo(+b.dataset.b, +b.dataset.l); $("stage").scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "center" }); });
+  }
+
+  function maps() {
+    const A = mode === "after";
+    const draw = (el, sel, sumEl) => {
+      const W = 1000, sx = W / G.L, Hh = G.H * sx, pad = 26, H = Hh + pad * 2;
+      let r = "", n = 0, ok = 0;
+      for (const t of G.tiles) {
+        if (!sel(t)) continue;
+        const code = A ? t[7] : t[6]; if (code === 4) continue;
+        n++; if (code === 0) ok++;
+        const x = (t[0] - t[4] / 2) * sx + pad, y = pad + (G.H - t[2] - t[5] / 2) * sx;
+        r += `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${(t[4] * sx + .4).toFixed(1)}" height="${(t[5] * sx + .4).toFixed(1)}" fill="${[HEX.ok, HEX.soft, HEX.miss][code]}"/>`;
+      }
+      let g = "";
+      G.bx.slice(1, -1).forEach((x, i) => { const X = pad + x * sx; g += `<line x1="${X}" y1="${pad}" x2="${X}" y2="${pad + Hh}" stroke="#0e0e0e" stroke-width="2" stroke-dasharray="6 4"/><text x="${X}" y="${pad - 8}" text-anchor="middle">BHD ${i + 1}</text>`; });
+      G.bz.slice(1, -1).forEach((z, i) => { const Y = pad + (G.H - z) * sx; g += `<line x1="${pad}" y1="${Y}" x2="${pad + G.L * sx}" y2="${Y}" stroke="#0e0e0e" stroke-width="2" stroke-dasharray="6 4"/><text x="${pad + G.L * sx + 6}" y="${Y + 4}">STR ${i + 1}</text>`; });
+      g += `<text x="${pad}" y="${H - 6}">AFT</text><text x="${pad + G.L * sx}" y="${H - 6}" text-anchor="end">FWD</text>`;
+      el.innerHTML = `<svg viewBox="0 0 ${W + pad * 2 + 50} ${H}" role="img" aria-label="Unfolded wall map" style="font:500 11px JetBrains Mono, monospace;fill:#9a968e"><rect x="${pad}" y="${pad}" width="${G.L * sx}" height="${Hh}" fill="#262626"/>${r}${g}</svg>`;
+      sumEl.textContent = `${fmt(100 * ok / Math.max(1, n))} % inspected`;
+    };
+    // outboard shell = the y = 0 plate's inner (+y) face; inboard bulkhead = the y = W plate's inner (-y) face
+    draw($("m1"), t => t[3] === 3 && Math.abs(t[1]) < 0.02, $("m1-s"));
+    draw($("m2"), t => t[3] === 2 && Math.abs(t[1] - G.W) < 0.02, $("m2-s"));
+  }
+
+  function panels() {
+    const S = D.summary, Q = D.settings.quality, Cm = D.settings.camera;
+    $("t-fl").querySelector("tbody").innerHTML = D.flights.map(f => `<tr><td>${f.n}</td><td class="r">${f.count}</td><td class="r">${fmt(f.length_m, 0)} m</td><td class="r">${fmt(f.minutes)} min</td></tr>`).join("")
+      + `<tr><td><b>Total</b></td><td class="r"><b>${S.refly_points.toLocaleString("en-US")}</b></td><td></td><td class="r"><b>${fmt(S.refly_minutes)} min</b></td></tr>`;
+    const set = [["Camera", `${Cm.hfov_deg}° × ${Cm.vfov_deg}°, ${Q.image_width_px} px`], ["Range", `${Cm.min_dist}–${Cm.max_dist} m, ≤ ${Cm.max_angle_deg}° off normal`],
+      ["Pixel size limit", `${fmt(Q.max_gsd_mm, 1)} mm`], ["Motion blur limit", `${Q.max_blur_px} px at ${Q.exposure_ms} ms`], ["Light reach", `${Q.light_range_m} m`], ["Position error tested", `${D.settings.pose_sigma_m} m, ${D.settings.pose_sigma_deg}°`]];
+    $("t-set").innerHTML = set.map(s => `<span>${s[0]}</span><span>${s[1]}</span>`).join("");
+    $("t-prov").innerHTML = `<div class="kv"><span>Software</span><span>${D.provenance.software} ${D.provenance.version}</span><span>Computed</span><span>${D.provenance.created_utc.replace("T", " ").slice(0, 16)} UTC</span></div>`
+      + D.provenance.inputs.map(x => `<div><div style="font-size:13px">${x.name}</div><div class="hash">SHA-256 ${x.sha256}</div></div>`).join("");
+  }
+
+  // ------------------------------------------------------------------ 3D
+  function buildTank() {
+    const steel = new THREE.MeshStandardMaterial({ color: 0x8a8f96, metalness: 0.45, roughness: 0.5 });
+    const edgeMat = new THREE.LineBasicMaterial({ color: 0x2a2c30 });
+    G.boxes.forEach((b, i) => {
+      const s = [b[3] - b[0], b[4] - b[1], b[5] - b[2]].map(v => Math.max(v, 0.03));
+      const m = new THREE.Mesh(new THREE.BoxGeometry(s[0], s[1], s[2]), steel);
+      m.position.set((b[0] + b[3]) / 2, (b[1] + b[4]) / 2, (b[2] + b[5]) / 2); m.castShadow = true; m.receiveShadow = true;
+      const e = new THREE.LineSegments(new THREE.EdgesGeometry(m.geometry), edgeMat); m.add(e);
+      scene.add(m); if (b[4] <= 0.001 && b[1] < -0.1) shellGroup.push(m);       // near side shell plate
+    });
+    // coloured wall tiles, 3 mm proud of the steel
+    const n = G.tiles.length, pos = new Float32Array(n * 12), nor = new Float32Array(n * 12), col = new Float32Array(n * 12).fill(1);
+    const cf = new Float32Array(n * 4), ca = new Float32Array(n * 4), tf = new Float32Array(n * 4), ta = new Float32Array(n * 4), idx = new Uint32Array(n * 6);
+    const shellTile = new Uint8Array(n);
+    G.tiles.forEach((t, i) => {
+      const ax = t[3] >> 1, sg = (t[3] & 1) ? 1 : -1, u = [1, 0, 0][ax] === 1 ? 1 : 0;
+      const axes = [0, 1, 2].filter(a => a !== ax), c = [t[0], t[1], t[2]]; c[ax] += sg * 0.004;
+      const corners = [[-1, -1], [1, -1], [1, 1], [-1, 1]];
+      corners.forEach((q, k) => {
+        const p = c.slice(); p[axes[0]] += q[0] * t[4] / 2; p[axes[1]] += q[1] * t[5] / 2;
+        pos.set(p, (4 * i + k) * 3); const nn = [0, 0, 0]; nn[ax] = sg; nor.set(nn, (4 * i + k) * 3);
+        cf[4 * i + k] = t[6]; ca[4 * i + k] = t[7]; tf[4 * i + k] = t[8] >= 0 ? t[8] / tMax : -1; ta[4 * i + k] = t[9];
+      });
+      idx.set([4 * i, 4 * i + 1, 4 * i + 2, 4 * i, 4 * i + 2, 4 * i + 3], 6 * i);
+      if (t[1] < -0.01 || (t[3] === 3 && Math.abs(t[1]) < 0.002)) shellTile[i] = 1;
+    });
+    const g = new THREE.BufferGeometry();
+    g.setAttribute("position", new THREE.BufferAttribute(pos, 3)); g.setAttribute("normal", new THREE.BufferAttribute(nor, 3)); g.setAttribute("color", new THREE.BufferAttribute(col, 3));
+    g.setAttribute("cf", new THREE.BufferAttribute(cf, 1)); g.setAttribute("ca", new THREE.BufferAttribute(ca, 1)); g.setAttribute("tf", new THREE.BufferAttribute(tf, 1)); g.setAttribute("ta", new THREE.BufferAttribute(ta, 1));
+    g.setIndex(new THREE.BufferAttribute(idx, 1));
+    tileMat = new THREE.MeshStandardMaterial({ vertexColors: true, metalness: 0.05, roughness: 0.75, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -2 });
+    tileMat.userData.u = { uF: { value: 0 }, uA: { value: 0 }, uMode: { value: 0 }, uHideShell: { value: 1 } };
+    tileMat.onBeforeCompile = sh => {
+      Object.assign(sh.uniforms, tileMat.userData.u);
+      sh.vertexShader = sh.vertexShader.replace("#include <common>", `#include <common>
+        attribute float cf; attribute float ca; attribute float tf; attribute float ta;
+        uniform float uF; uniform float uA; uniform float uMode;`)
+        .replace("#include <color_vertex>", `#include <color_vertex>
+        vec3 OK = vec3(1.0, 0.98, 0.93), SOFT = vec3(0.21, 0.43, 0.91), MISS = vec3(0.03, 0.12, 0.78), STEEL = vec3(0.25, 0.27, 0.30);
+        vec3 c;
+        if (cf > 3.5) c = STEEL;
+        else {
+          // pilot's flight: everything starts "not inspected"; a wall turns white at the moment it was imaged sharply
+          bool seenF = cf < 0.5 && tf >= 0.0 && tf <= uF;
+          c = seenF ? OK : MISS;
+          if (uF >= 0.999 && cf > 0.5 && cf < 1.5) c = SOFT;
+          float fl = (cf < 0.5 && tf >= 0.0) ? max(0.0, 1.0 - (uF - tf) * 60.0) : 0.0;
+          if (seenF) c += vec3(0.6) * fl;
+          if (uMode > 0.5) {
+            bool fixedR = ca < 0.5 && cf > 0.5 && ta >= 0.0 && ta <= uA;
+            if (fixedR) { c = OK; c += vec3(0.6) * max(0.0, 1.0 - (uA - ta) * 50.0); }
+          }
+        }
+        vColor = c;`);
+    };
+    const tiles = new THREE.Mesh(g, tileMat); tiles.receiveShadow = false; scene.add(tiles);
+    // the near shell's own tiles are hidden with it through a second index range
+    const keep = [], shell = [];
+    for (let i = 0; i < n; i++) (shellTile[i] ? shell : keep).push(4 * i, 4 * i + 1, 4 * i + 2, 4 * i, 4 * i + 2, 4 * i + 3);
+    const all = new Uint32Array(keep.length + shell.length); all.set(keep); all.set(shell, keep.length); g.setIndex(new THREE.BufferAttribute(all, 1));
+    g.addGroup(0, keep.length, 0); g.addGroup(keep.length, shell.length, 1);
+    const hiddenMat = tileMat.clone(); hiddenMat.onBeforeCompile = tileMat.onBeforeCompile; hiddenMat.userData = tileMat.userData; hiddenMat.visible = false;
+    tiles.material = [tileMat, hiddenMat]; tiles.userData.shellMat = hiddenMat;
+    return tiles;
+  }
+
+  function buildDrone() {
+    const d = new THREE.Group();
+    const cage = new THREE.LineSegments(new THREE.WireframeGeometry(new THREE.IcosahedronGeometry(0.28, 1)), new THREE.LineBasicMaterial({ color: 0xdedbd4, transparent: true, opacity: 0.55 }));
+    d.add(cage);
+    const dark = new THREE.MeshStandardMaterial({ color: 0x1b1c1f, metalness: 0.3, roughness: 0.6 });
+    d.add(new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.12, 0.06), dark));
+    const rotors = [];
+    [[1, 1], [1, -1], [-1, 1], [-1, -1]].forEach(([a, b]) => {
+      const arm = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.02, 0.015), dark); arm.position.set(a * 0.07, b * 0.07, 0); arm.rotation.z = Math.atan2(b, a); d.add(arm);
+      const r = new THREE.Mesh(new THREE.CylinderGeometry(0.065, 0.065, 0.005, 20), new THREE.MeshBasicMaterial({ color: 0xcfccc5, transparent: true, opacity: 0.35 }));
+      r.rotation.x = Math.PI / 2; r.position.set(a * 0.13, b * 0.13, 0.04); d.add(r); rotors.push(r);
+    });
+    const led = new THREE.Mesh(new THREE.SphereGeometry(0.025, 12, 8), new THREE.MeshBasicMaterial({ color: 0xffffff })); led.position.set(0.09, 0, 0); d.add(led);
+    spot = new THREE.SpotLight(0xfff4e6, 2.4, 6, 0.5, 0.55, 1.2); spot.position.set(0.1, 0, 0); d.add(spot); d.add(spot.target); spot.target.position.set(2, 0, 0);
+    // translucent cone = what the camera looks at
+    const cone = new THREE.Mesh(new THREE.ConeGeometry(0.9, 1.8, 24, 1, true), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.07, depthWrite: false, side: THREE.DoubleSide }));
+    cone.rotation.z = Math.PI / 2; cone.position.set(1.0, 0, 0); d.add(cone);
+    d.userData.rotors = rotors; d.scale.setScalar(1.25);
+    return d;
+  }
+
+  function poseFlown(p) {   // p 0..1 of the logged flight
+    const T = p * tMax; let lo = 0, hi = flight.length - 1;
+    while (hi - lo > 1) { const m = (lo + hi) >> 1; if (flight[m][0] <= T) lo = m; else hi = m; }
+    const a = flight[lo], b = flight[hi], f = b[0] > a[0] ? (T - a[0]) / (b[0] - a[0]) : 0;
+    const lerp = (i) => a[i] + (b[i] - a[i]) * f;
+    let dy = b[4] - a[4]; if (dy > 180) dy -= 360; if (dy < -180) dy += 360;
+    return [lerp(1), lerp(2), lerp(3), a[4] + dy * f, lerp(5)];
+  }
+  function poseRoute(p) {
+    const L = routeCum[routeCum.length - 1] * p; let i = 1; while (i < routeCum.length - 1 && routeCum[i] < L) i++;
+    const a = routePts[i - 1], b = routePts[i], f = (L - routeCum[i - 1]) / Math.max(1e-6, routeCum[i] - routeCum[i - 1]);
+    const x = a.x + (b.x - a.x) * f, y = a.y + (b.y - a.y) * f, z = a.z + (b.z - a.z) * f;
+    const yaw = Math.atan2(b.y - a.y, b.x - a.x) * 180 / Math.PI;
+    return [x, y, z, yaw, -10];
+  }
+
+  function setMode(m) {
+    mode = m; $("b-flown").setAttribute("aria-pressed", m === "flown"); $("b-after").setAttribute("aria-pressed", m === "after");
+    texts(); if (!tileMat) return;
+    tileMat.userData.u.uMode.value = m === "after" ? 1 : 0;
+    if (m === "after") { tileMat.userData.u.uF.value = 1; routeLine.visible = $("c-path").checked; pathLine.visible = false; }
+    else { pathLine.visible = $("c-path").checked; routeLine.visible = false; }
+    prog = reduce ? 1 : 0; playing = true;
+  }
+
+  function goTo(bay, level) {
+    const x = (G.bx[bay - 1] + G.bx[bay]) / 2, z = (G.bz[level - 1] + G.bz[level]) / 2;
+    tween(new THREE.Vector3(x, G.W / 2, z), new THREE.Vector3(x - 2.2, -6.5, z + 1.8));
+    $("c-follow").checked = follow = false;
+  }
+  let tw = null;
+  function tween(target, position) { tw = { t: 0, ft: controls.target.clone(), fp: camera.position.clone(), tt: target, tp: position }; }
+
+  function init(model) {
+    G = model; tMax = G.flight[G.flight.length - 1][0]; flight = G.flight;
+    const canvas = $("gl"), stage = $("stage");
+    renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+    renderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));
+    renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.outputEncoding = THREE.sRGBEncoding; renderer.toneMapping = THREE.NoToneMapping;
+    scene = new THREE.Scene();
+    camera = new THREE.PerspectiveCamera(34, 1, 0.05, 300); camera.up.set(0, 0, 1);
+    scene.add(new THREE.HemisphereLight(0xf4f1ea, 0x3a3c40, 0.9));
+    const sun = new THREE.DirectionalLight(0xffffff, 1.1); sun.position.set(-10, -22, 30); sun.castShadow = true;
+    sun.shadow.mapSize.set(2048, 2048); sun.shadow.bias = -0.0004; sun.shadow.normalBias = 0.03; Object.assign(sun.shadow.camera, { left: -14, right: 14, top: 14, bottom: -14, near: 1, far: 80 });
+    sun.target.position.set(G.L / 2, G.W / 2, G.H / 2); scene.add(sun, sun.target);
+    const rim = new THREE.DirectionalLight(0xbcd0ff, 0.35); rim.position.set(30, 20, 10); scene.add(rim);
+
+    const tiles = buildTank();
+    const pp = G.flight.map(r => new THREE.Vector3(r[1], r[2], r[3]));
+    pathLine = new THREE.Line(new THREE.BufferGeometry().setFromPoints(pp), new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.55 }));
+    pathLine.geometry.setDrawRange(0, 1); scene.add(pathLine);
+    routePts = D.route.map(r => new THREE.Vector3(r[1], r[2], r[3])); routeCum = [0];
+    for (let i = 1; i < routePts.length; i++) routeCum.push(routeCum[i - 1] + routePts[i].distanceTo(routePts[i - 1]));
+    routeLine = new THREE.Line(new THREE.BufferGeometry().setFromPoints(routePts), new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.55 }));
+    routeLine.visible = false; routeLine.geometry.setDrawRange(0, 1); scene.add(routeLine);
+    drone = buildDrone(); scene.add(drone);
+
+    const ctr = new THREE.Vector3(G.L / 2, G.W / 2, G.H / 2 - 0.5);
+    camera.position.set(ctr.x - 9, ctr.y - 31, ctr.z + 7);
+    controls = new THREE.OrbitControls(camera, canvas); controls.target.copy(ctr); controls.enableDamping = true; controls.dampingFactor = 0.07;
+    controls.minDistance = 2; controls.maxDistance = 80;
+    controls.addEventListener("start", () => { tw = null; });
+    const resize = () => { const w = stage.clientWidth, h = stage.clientHeight; renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); };
+    new ResizeObserver(resize).observe(stage); resize();
+
+    const setShell = on => { shellGroup.forEach(m => m.visible = on); tiles.userData.shellMat.visible = on; $("st-l").textContent = `PORT WING BALLAST TANK · ${fmt(G.L)} × ${fmt(G.W)} × ${fmt(G.H)} M` + (on ? "" : " · NEAR SIDE SHELL REMOVED"); };
+    setShell(false);
+    $("c-shell").onchange = e => setShell(e.target.checked);
+    $("c-path").onchange = e => { if (mode === "after") routeLine.visible = e.target.checked; else pathLine.visible = e.target.checked; };
+    $("c-follow").onchange = e => { follow = e.target.checked; tw = null; };
+    $("replay").onclick = () => { prog = 0; playing = true; };
+
+    const fSorted = D.s.map((s, i) => (s <= 1 && D.t[i] != null) ? D.t[i] / tMax : null).filter(v => v != null).sort((a, b) => a - b);
+    const nP = D.s.length, base = D.s.filter(s => s <= 1).length, missingSorted = [];
+    // re-fly reveal order per patch from the tiles (same order the 3D uses)
+    const seen = new Set();
+    G.tiles.forEach(t => { if (t[10] >= 0 && t[9] >= 0 && !seen.has(t[10])) { seen.add(t[10]); missingSorted.push(t[9]); } });
+    missingSorted.sort((a, b) => a - b);
+    const target = D.summary.after_refly_pct, add = target - 100 * base / nP;
+    const upper = (arr, v) => { let lo = 0, hi = arr.length; while (lo < hi) { const m = (lo + hi) >> 1; if (arr[m] <= v) lo = m + 1; else hi = m; } return lo; };
+
+    const clock = new THREE.Clock(); let started = false;
+    renderer.setAnimationLoop(() => {
+      const dt = Math.min(clock.getDelta(), 0.05), el = clock.elapsedTime;
+      if (!started && (el > (reduce ? 0 : 3.4) || intro.hidden)) { started = true; playing = true; if (reduce) prog = 1; }
+      if (started && playing) { prog = Math.min(1, prog + dt / (mode === "after" ? REFLY_S : FLY_S)); if (prog >= 1) playing = false; }
+      const u = tileMat.userData.u;
+      let pct, pose;
+      if (mode === "flown") {
+        u.uF.value = prog; pose = poseFlown(Math.min(prog, 0.9999));
+        pathLine.geometry.setDrawRange(0, Math.max(1, Math.floor(pp.length * prog)));
+        pct = prog >= 1 ? D.summary.inspected_pct : 100 * upper(fSorted, prog) / nP;
+      } else {
+        u.uA.value = prog; pose = poseRoute(Math.min(prog, 0.9999));
+        routeLine.geometry.setDrawRange(0, Math.max(1, Math.floor(routePts.length * prog)));
+        const frac = missingSorted.length ? upper(missingSorted, prog) / missingSorted.length : 1;
+        pct = prog >= 1 ? target : D.summary.inspected_pct + add * frac;
+      }
+      $("cnt").textContent = fmt(pct) + " %"; $("cnt-bar").style.width = pct + "%";
+      drone.position.set(pose[0], pose[1], pose[2]);
+      drone.rotation.set(0, -pose[4] * Math.PI / 180, pose[3] * Math.PI / 180, "ZYX");
+      drone.userData.rotors.forEach((r, i) => r.rotation.y += (i % 2 ? 1 : -1) * 0.9);
+      if (follow) { const want = drone.position.clone().add(new THREE.Vector3(-2.5, -5.5, 2.2)); camera.position.lerp(want, 0.06); controls.target.lerp(drone.position, 0.12); }
+      if (tw) { tw.t = Math.min(1, tw.t + dt / 1.2); const e = tw.t < .5 ? 2 * tw.t * tw.t : 1 - Math.pow(-2 * tw.t + 2, 2) / 2; controls.target.lerpVectors(tw.ft, tw.tt, e); camera.position.lerpVectors(tw.fp, tw.tp, e); if (tw.t >= 1) tw = null; }
+      controls.update(); renderer.render(scene, camera);
+    });
+    $("loading").hidden = true;
+  }
+
+  $("b-flown").onclick = () => setMode("flown"); $("b-after").onclick = () => setMode("after");
+  Promise.all([fetch("data.json").then(r => r.json()), fetch("model.json").then(r => r.json())]).then(([d, m]) => {
+    D = d; G = m; texts(); panels();
+    if (!window.THREE || !THREE.OrbitControls) { $("loading").textContent = "3D VIEW UNAVAILABLE IN THIS BROWSER"; return; }
+    init(m);
+  }).catch(e => { console.error(e); $("loading").textContent = "COULD NOT LOAD THE TANK. RELOAD TO TRY AGAIN."; });
+})();
+</script>
+
+</body>
+</html>
