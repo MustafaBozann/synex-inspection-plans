@@ -6,6 +6,36 @@ SYNEX computes where the drone must fly, where the camera must look and in which
 
 ![SYNEX plan vs standard pattern](docs/hero.jpg)
 
+## New: Coverage Check, what your footage really inspected
+
+Most confined-space flights end with hours of video and one open question: **was every wall actually inspected, or only flown past?**
+SYNEX Coverage Check answers it from the files your drone already records, the point cloud and the flight log, within 24 hours.
+
+**[Open the interactive sample report](https://mustafabozann.github.io/synex-inspection-plans/report/)**
+
+[![Coverage Check sample report: pilot's flight vs. with SYNEX re-fly](docs/report/preview.jpg)](https://mustafabozann.github.io/synex-inspection-plans/report/)
+
+*Sample on a simulated ship wing ballast tank (16.9 × 2.8 × 14.8 m, 5 transverse bulkheads, 3 stringer decks, 24 compartments) and a simulated manual flight. Left: the pilot's flight. Right: the same flight plus the SYNEX re-fly points.*
+
+### How to read the report
+
+| Part | What it shows | How it is computed |
+|---|---|---|
+| **Headline counter** | Share of the wall surface inspected at inspection quality: 19.9 % for the pilot's flight, 99.5 % after re-fly. The drone in the 3D view replays the logged flight; a wall turns white at the moment the camera saw it sharply. | The wall is cut into 0.5 × 0.5 m patches. A patch counts only when **all** of its check points (up to 5) pass. |
+| **Colours** | White: inspected. Light blue: in the camera's view, but the image was not sharp enough. Dark blue: never in the camera's view. | "Sharp enough" = at most 1 mm of wall per pixel at the actual viewing angle, motion blur under 1.5 px (moving and turning), and within reach of the drone's lights. All limits are adjustable to your own standard. |
+| **Compartments** | One cell per compartment (bay × level) with the share of its walls inspected. Click a cell to fly the 3D view there. | Bays are numbered from the aft end, levels from the bottom. |
+| **Wall maps** | The two long walls unfolded flat, like a shell expansion drawing, with the bulkheads (BHD) and stringer decks (STR) as dashed lines. | Same patch results, drawn at true scale. |
+| **Re-fly plan** | The extra viewpoints (position and camera angle), grouped into short flights that each fit one battery, with route length and time. | Routes start and end at the manhole and keep the cage radius plus a safety margin from every surface. |
+| **Certain / uncertain** | How much of the result still holds if the logged positions are off by 10 cm and 2°. | The flight is re-checked with random position errors; areas whose result changes are added to the re-fly plan. |
+| **Viewing angle** | Share of the wall seen at 0–25° (ideal), 25–40° (good) and 40–50° (conditional) off the wall's normal. | Straightest inspection-quality view of each patch. |
+| **Provenance** | Software version, date, settings and a SHA-256 fingerprint of every input file. | So any result can be reproduced and audited. |
+
+**What we need from you:** a point cloud of the space (`.las`, `.laz`, `.e57`, `.ply`, ...) and the flight log with camera position and direction (CSV, or a ROS bag). No CAD drawing is needed.
+
+**Accuracy, stated plainly:** on four simulated structures, of the patches the engine called inspected, at most 1.1 % were not fully seen according to the simulator's independent ground truth. It has **not yet been validated on customer field data**; that is what the free trial is for. Full coverage means every wall area was imaged at the stated quality, not that every defect was found: the images are still assessed by a qualified inspector.
+
+**Free trial:** send one past flight you are allowed to share. You get the report within 24 hours, free; we only ask for your honest feedback. Open an [issue](../../issues/new) or reply to our email.
+
 ## 100 plans, 100 different structures
 
 | | |
