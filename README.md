@@ -11,11 +11,18 @@ SYNEX computes where the drone must fly, where the camera must look and in which
 Most confined-space flights end with hours of video and one open question: **was every wall actually inspected, or only flown past?**
 SYNEX Coverage Check answers it from the files your drone already records, the point cloud and the flight log, within 24 hours.
 
-**[Open the interactive sample report](https://mustafabozann.github.io/synex-inspection-plans/report/)**
+**[Open the interactive sample reports](https://mustafabozann.github.io/synex-inspection-plans/report/)**: four confined spaces, each with a drone replaying the pilot's flight inside the structure.
 
-[![Coverage Check sample report: pilot's flight vs. with SYNEX re-fly](docs/report/preview.jpg)](https://mustafabozann.github.io/synex-inspection-plans/report/)
+[![Coverage Check sample reports: ballast tank, boiler, storage tank, penstock](docs/report/preview.jpg)](https://mustafabozann.github.io/synex-inspection-plans/report/)
 
-*Sample on a simulated ship wing ballast tank (16.9 × 2.8 × 14.8 m, 5 transverse bulkheads, 3 stringer decks, 24 compartments) and a simulated manual flight. Left: the pilot's flight. Right: the same flight plus the SYNEX re-fly points.*
+| Structure | Wall surface | Pilot's flight, inspection quality | With SYNEX re-fly | Re-fly |
+|---|---|---|---|---|
+| Ship wing ballast tank (16.9 × 2.8 × 14.8 m, 24 compartments) | 1,037 m² | 19.9 % | **99.5 %** | 7 flights, ~53 min |
+| Power plant boiler (7.0 × 9.0 × 23.6 m) | 1,107 m² | 40.0 % | **92.4 %** | 8 flights, ~55 min |
+| Vertical storage tank (Ø 10.6 × 11.0 m) | 719 m² | 61.0 % | **93.4 %** | 3 flights, ~19 min |
+| Hydro penstock (Ø 2.5 × 75 m) | 640 m² | 75.0 % | **99.9 %** | 3 flights, ~21 min |
+
+*All four structures and pilot flights are simulated. Where the re-fly result stays below 100 %, the remaining walls cannot be reached with the drone's safety margin; the report lists them instead of hiding them.*
 
 ### How to read the report
 
