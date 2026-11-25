@@ -5,7 +5,7 @@
 Confined-space flights in ballast tanks, boilers, storage tanks and penstocks end with hours of video and one open question: which walls were actually inspected, and which were only flown past?
 SYNEX Coverage Check answers it from the files your drone already records, the point cloud and the flight log, **within 24 hours**.
 
-**[Open the interactive report →](https://mustafabozann.github.io/synex-inspection-plans/report/)**
+**[Website & free pilot →](https://mustafabozann.github.io/synex-inspection-plans/)** · **[Open the interactive report →](https://mustafabozann.github.io/synex-inspection-plans/report/)**
 
 [![Pilot's flight 19.9 % inspected; with SYNEX re-fly 99.5 %](docs/img/hero.jpg)](https://mustafabozann.github.io/synex-inspection-plans/report/)
 
@@ -69,4 +69,4 @@ Where the re-fly result stays below 100 %, the remaining walls cannot be reached
 
 Send one past flight you are allowed to share (point cloud and flight log, anonymised if needed). You get the full report **within 24 hours, free**. We only ask for your honest feedback: does it match what your inspectors saw?
 
-Open an [issue in this repository](../../issues/new) or reply to our email. Your data is used only for the analysis and deleted on request.
+Request it on the [website](https://mustafabozann.github.io/synex-inspection-plans/#pilot), open an [issue in this repository](../../issues/new), or write to **synex636@gmail.com**. Your data is used only for the analysis and deleted on request.
